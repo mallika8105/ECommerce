@@ -1,0 +1,99 @@
+.auth-form-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.auth-form-container h2 {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 2rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #555;
+  font-weight: bold;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"] {
+  width: calc(100% - 22px); /* Account for padding and border */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.auth-form-container button {
+  width: 100%;
+  padding: 12px 20px;
+  background-color: #FF5733;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 15px;
+}
+
+.auth-form-container button:hover:not(:disabled) {
+  background-color: #C70039;
+}
+
+.auth-form-container button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.toggle-auth {
+  margin-top: 20px;
+  color: #666;
+}
+
+.toggle-link {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.toggle-link:hover {
+  color: #0056b3;
+}
+
+.auth-message {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #e0ffe0;
+  color: #338833;
+  border: 1px solid #aaffaa;
+}
+
+/* Error message styling */
+.auth-message.error {
+  background-color: #ffe0e0;
+  color: #cc3333;
+  border: 1px solid #ffaaaa;
+}
+
+@media (max-width: 480px) {
+  .auth-form-container {
+    margin: 20px;
+    padding: 20px;
+  }
+  .auth-form-container h2 {
+    font-size: 1.8rem;
+  }
+}

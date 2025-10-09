@@ -1,0 +1,132 @@
+.user-account-container {
+  font-family: 'Arial', sans-serif;
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.user-account-container h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+}
+
+.account-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.account-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.account-section h2 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.account-section h2 .icon {
+  margin-right: 10px;
+  color: #FF5733; /* Accent color */
+}
+
+.account-section p {
+  color: #666;
+  line-height: 1.7;
+}
+
+.account-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.account-section li {
+  background-color: #f9f9f9;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.account-section li:last-child {
+  margin-bottom: 0;
+}
+
+/* Specific styling for sections */
+.profile-info p, .saved-addresses p, .wishlist p {
+  margin-bottom: 10px;
+}
+
+.order-history ul, .saved-addresses ul, .wishlist ul {
+  margin-top: 15px;
+}
+
+.order-item, .address-item, .wishlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-item h4, .address-item h4, .wishlist-item h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.order-item p, .address-item p, .wishlist-item p {
+  margin: 0;
+  color: #777;
+}
+
+.order-item .order-details, .address-item .address-details, .wishlist-item .wishlist-details {
+  flex-grow: 1;
+  margin-right: 15px;
+}
+
+.order-item .order-actions button, .address-item .address-actions button, .wishlist-item .wishlist-actions button {
+  background-color: #FF5733;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.order-item .order-actions button:hover, .address-item .address-actions button:hover, .wishlist-item .wishlist-actions button:hover {
+  background-color: #C70039;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .user-account-container {
+    margin: 20px;
+    padding: 20px;
+  }
+  .account-section h2 {
+    font-size: 1.5rem;
+  }
+  .order-item, .address-item, .wishlist-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .order-item .order-details, .address-item .address-details, .wishlist-item .wishlist-details {
+    margin-right: 0;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  .order-item .order-actions button, .address-item .address-actions button, .wishlist-item .wishlist-actions button {
+    width: 100%;
+    text-align: center;
+  }
+}
