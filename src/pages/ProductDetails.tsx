@@ -6,6 +6,7 @@ import Card from '../components/Card';
 import { Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext'; // Import useCart
+import './ProductDetails.css'; // Import the custom CSS file
 
 interface Product {
   id: string;
@@ -167,19 +168,19 @@ const ProductDetails: React.FC = () => {
   console.log('ProductDetails component rendered for productId:', productId); // Debug log
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-grow container mx-auto p-4 bg-white rounded-lg shadow-md">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <div className="product-details-page">
+      <main className="product-details-main">
+        <div className="product-details-container">
           {/* Product Gallery - Left Side (smaller) */}
-          <div className="lg:col-span-1">
-            <img src={mainImage} alt={product.name} className="w-full h-auto object-cover rounded-lg shadow-md mb-4" />
-            <div className="flex space-x-2 overflow-x-auto">
+          <div className="product-image-gallery">
+            <img src={mainImage} alt={product.name} className="main-product-image" />
+            <div className="thumbnail-gallery">
               {[product.image_url, ...(product.additional_images || [])].map((img, index) => (
                 <img
                   key={index}
                   src={img}
                   alt={`Product thumbnail ${index + 1}`}
-                  className={`w-24 h-24 object-cover rounded-md cursor-pointer border-2 ${mainImage === img ? 'border-black' : 'border-transparent'}`}
+                  className={`thumbnail-image ${mainImage === img ? 'selected' : ''}`}
                   onClick={() => setMainImage(img)}
                 />
               ))}
@@ -187,24 +188,24 @@ const ProductDetails: React.FC = () => {
           </div>
 
           {/* Product Info & Description - Right Side */}
-          <div className="lg:col-span-2">
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">{product.name}</h1>
-            <p className="text-2xl text-black font-semibold mb-6">${product.price.toFixed(2)}</p>
-            <p className="text-gray-700 mb-8 leading-relaxed">{product.description}</p>
+          <div className="product-info-description">
+            <h1 className="product-name">{product.name}</h1>
+            <p className="product-price">${product.price.toFixed(2)}</p>
+            <p className="product-description">{product.description}</p>
 
             {/* Product Description Details (Color, Size Chart, etc.) */}
-            <div className="mb-8 p-4 border rounded-lg bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Details</h2>
+            <div className="product-details-section">
+              <h2 className="product-details-title">Product Details</h2>
 
               {/* Color Selection */}
               {product.colors && product.colors.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Color:</h3>
+                <div className="detail-item">
+                  <h3 className="detail-label">Color:</h3>
                   <div className="flex space-x-2">
                     {product.colors.map((color, index) => (
                       <span
                         key={index}
-                        className="w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer"
+                        className="color-option"
                         style={{ backgroundColor: color }}
                         title={color}
                       ></span>
@@ -215,13 +216,13 @@ const ProductDetails: React.FC = () => {
 
               {/* Size Selection */}
               {product.available_sizes && product.available_sizes.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Size:</h3>
+                <div className="detail-item">
+                  <h3 className="detail-label">Size:</h3>
                   <div className="flex space-x-2">
                     {product.available_sizes.map((size, index) => (
                       <button
                         key={index}
-                        className={`px-4 py-2 border rounded-md ${selectedSize === size ? 'bg-black text-white border-black' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
+                        className={`size-button ${selectedSize === size ? 'selected' : ''}`}
                         onClick={() => setSelectedSize(size)}
                       >
                         {size}
@@ -233,36 +234,36 @@ const ProductDetails: React.FC = () => {
 
               {/* Size Chart Link */}
               {product.size_chart_url && (
-                <div className="mb-4">
-                  <Link to={product.size_chart_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <div className="detail-item">
+                  <Link to={product.size_chart_url} target="_blank" rel="noopener noreferrer" className="size-chart-link">
                     View Size Chart
                   </Link>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center space-x-4 mb-8">
+            <div className="action-buttons">
               <Input
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
                 min="1"
-                className="w-24 text-center"
+                className="quantity-input"
                 label="Quantity"
               />
               <Button variant="primary" size="large" onClick={handleAddToCart}>
                 Add to Cart
               </Button>
-              <Button variant="secondary" size="large" onClick={handleBuyNow} className="bg-red-800 hover:bg-red-900">
+              <Button variant="secondary" size="large" onClick={handleBuyNow} className="buy-now-button">
                 Buy Now
               </Button>
             </div>
 
             {/* Reviews Section */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>
+            <div className="reviews-section">
+              <h2 className="reviews-title">Customer Reviews</h2>
               {reviews.length > 0 ? (
-                <div className="space-y-4">
+                <div className="reviews-list">
                   {reviews.map((review) => (
                     <Card key={review.id}>
                       <div className="flex items-center mb-2">
@@ -279,16 +280,16 @@ const ProductDetails: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600">No reviews yet. Be the first to review!</p>
+                <p className="no-reviews-text">No reviews yet. Be the first to review!</p>
               )}
             </div>
           </div>
         </div>
 
         {/* Related Products */}
-        <section>
-          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Related Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="related-products-section">
+          <h2 className="related-products-title">Related Products</h2>
+          <div className="related-products-grid">
             {relatedProducts.map((related) => (
               <Link to={`/product/${related.id}`} key={related.id}>
                 <Card className="text-center">
