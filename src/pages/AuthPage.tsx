@@ -1,33 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation and useNavigate
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import { Chrome } from 'lucide-react'; // Placeholder for social login icon
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const { signIn, user, isAdmin } = useAuth(); // Use the signIn function from AuthContext, and isAdmin
+
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard'); // Redirect regular users from public auth page
+      }
+    }
+  }, [user, isAdmin, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
     if (isLogin) {
-      console.log('Logging in with:', { email, password });
-      // Implement login logic
+      const { user: loggedInUser, error } = await signIn(email, password);
+      if (error) {
+        setMessage(error.message);
+      } else if (loggedInUser) {
+        setMessage('Login successful!');
+        // The useEffect above will handle the redirection based on isAdmin status
+      }
     } else {
       if (password !== confirmPassword) {
-        alert('Passwords do not match!');
+        setMessage('Passwords do not match!');
+        setLoading(false);
         return;
       }
-      console.log('Registering with:', { email, password });
-      // Implement registration logic
+      try {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          setMessage(error.message);
+        } else if (data.user) {
+          setMessage('Registration successful! Please check your email to confirm.');
+          // Optionally, sign in the user after successful registration
+          // await signIn(email, password);
+        }
+      } catch (err: any) {
+        setMessage(err.message || 'Registration failed');
+      }
     }
+    setLoading(false);
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Logging in with ${provider}`);
-    // Implement social login logic
+  const handleSocialLogin = async (provider: 'google') => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin + '/auth/callback', // Adjust redirect URL as needed
+        },
+      });
+      if (error) {
+        setMessage(error.message);
+      }
+    } catch (err: any) {
+      setMessage(err.message || 'Social login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,10 +115,16 @@ const AuthPage: React.FC = () => {
                 required
               />
             )}
-            <Button type="submit" variant="primary" className="w-full">
+            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
               {isLogin ? 'Login' : 'Register'}
             </Button>
           </form>
+
+          {message && (
+            <div className={`mt-4 p-3 rounded-md text-sm ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+              {message}
+            </div>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
@@ -73,6 +132,7 @@ const AuthPage: React.FC = () => {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-blue-600 hover:underline font-semibold"
+                disabled={loading}
               >
                 {isLogin ? 'Register' : 'Login'}
               </button>
@@ -81,7 +141,8 @@ const AuthPage: React.FC = () => {
             <Button
               variant="secondary"
               className="w-full flex items-center justify-center space-x-2"
-              onClick={() => handleSocialLogin('Google')}
+              onClick={() => handleSocialLogin('google')}
+              disabled={loading}
             >
               <Chrome size={20} />
               <span>Continue with Google</span>

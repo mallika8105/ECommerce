@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import { Eye, Package, Truck, CheckCircle, XCircle, Info } from 'lucide-react';
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 interface OrderItem {
   productId: string;
@@ -22,40 +23,6 @@ interface Order {
   items: OrderItem[];
 }
 
-const sampleOrders: Order[] = [
-  {
-    id: 'ORD001',
-    customerName: 'Jane Doe',
-    date: '2025-10-01',
-    status: 'Delivered',
-    total: 289.98,
-    items: [
-      { productId: '1', productName: 'Premium Wireless Headphones', quantity: 1, price: 199.99 },
-      { productId: '2', productName: 'Bluetooth Speaker', quantity: 1, price: 89.99 },
-    ],
-  },
-  {
-    id: 'ORD002',
-    customerName: 'John Smith',
-    date: '2025-09-15',
-    status: 'Shipped',
-    total: 129.99,
-    items: [
-      { productId: '3', productName: 'Smartwatch', quantity: 1, price: 129.99 },
-    ],
-  },
-  {
-    id: 'ORD003',
-    customerName: 'Alice Brown',
-    date: '2025-10-05',
-    status: 'Pending',
-    total: 50.00,
-    items: [
-      { productId: '4', productName: 'USB Cable', quantity: 2, price: 25.00 },
-    ],
-  },
-];
-
 const statusOptions = [
   { label: 'Pending', value: 'Pending' },
   { label: 'Processing', value: 'Processing' },
@@ -65,9 +32,29 @@ const statusOptions = [
 ];
 
 const OrdersManagement: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('orders').select('*'); // Assuming 'orders' table
+    if (error) {
+      console.error('Error fetching orders:', error);
+      setError('Failed to fetch orders.');
+      setOrders([]);
+    } else {
+      setOrders(data as Order[]);
+      setError(null);
+    }
+    setLoading(false);
+  };
 
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -79,14 +66,19 @@ const OrdersManagement: React.FC = () => {
     setSelectedOrder(null);
   };
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus as Order['status'] } : order
-      )
-    );
-    console.log(`Order ${orderId} status updated to ${newStatus}`);
-    // Implement API call to update order status
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error updating order status:', error);
+      setError('Failed to update order status.');
+    } else {
+      fetchOrders(); // Re-fetch orders to get the updated list
+      setError(null);
+    }
   };
 
 

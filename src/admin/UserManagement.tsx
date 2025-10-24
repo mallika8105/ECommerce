@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import Dropdown from '../components/Dropdown';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 interface User {
   id: string;
@@ -14,19 +15,13 @@ interface User {
   role: 'Customer' | 'Admin';
 }
 
-const sampleUsers: User[] = [
-  { id: 'u1', name: 'Jane Doe', email: 'jane.doe@example.com', role: 'Customer' },
-  { id: 'u2', name: 'John Smith', email: 'john.smith@example.com', role: 'Customer' },
-  { id: 'u3', name: 'Admin User', email: 'admin@example.com', role: 'Admin' },
-];
-
 const roleOptions = [
   { label: 'Customer', value: 'Customer' },
   { label: 'Admin', value: 'Admin' },
 ];
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(sampleUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -35,6 +30,27 @@ const UserManagement: React.FC = () => {
     email: '',
     role: 'Customer',
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    // Fetch users from 'profiles' table, assuming it stores user details and roles
+    const { data, error } = await supabase.from('profiles').select('id, name, email, role');
+    if (error) {
+      console.error('Error fetching users:', error);
+      setError('Failed to fetch users.');
+      setUsers([]);
+    } else {
+      setUsers(data as User[]);
+      setError(null);
+    }
+    setLoading(false);
+  };
 
   const handleAddUser = () => {
     setIsEditMode(false);
@@ -54,11 +70,18 @@ const UserManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      console.log('Deleted user:', userId);
-      // Implement API call to delete user
+      // Deleting a user from 'profiles' table and potentially from auth.users
+      // For auth.users, you might need a Supabase Function or Admin API
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      if (error) {
+        console.error('Error deleting user:', error);
+        setError('Failed to delete user.');
+      } else {
+        fetchUsers(); // Re-fetch users to get the updated list
+        setError(null);
+      }
     }
   };
 
@@ -75,22 +98,33 @@ const UserManagement: React.FC = () => {
     setFormData((prev) => ({ ...prev, role: value as User['role'] }));
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditMode && currentUser) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === currentUser.id ? { ...u, ...formData, id: u.id } : u))
-      );
-      console.log('Updated user:', { ...currentUser, ...formData });
-      // Implement API call to update user
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name: formData.name, email: formData.email, role: formData.role })
+        .eq('id', currentUser.id);
+      if (error) {
+        console.error('Error updating user:', error);
+        setError('Failed to update user.');
+      } else {
+        fetchUsers(); // Re-fetch users to get the updated list
+        setError(null);
+      }
     } else {
-      const newUser: User = {
-        id: `u${users.length + 1}`, // Simple ID generation
-        ...formData,
-      };
-      setUsers((prev) => [...prev, newUser]);
-      console.log('Added new user:', newUser);
-      // Implement API call to add user
+      // For adding a new user, direct insertion into 'profiles' might not be enough
+      // as it needs to be linked with Supabase Auth.
+      // This typically involves signing up a user via auth.signUp and then inserting into profiles.
+      // For simplicity, I'll just add to profiles for now, assuming auth.signUp is handled elsewhere.
+      const { error } = await supabase.from('profiles').insert([formData]);
+      if (error) {
+        console.error('Error adding user:', error);
+        setError('Failed to add user.');
+      } else {
+        fetchUsers(); // Re-fetch users to get the new user
+        setError(null);
+      }
     }
     setIsModalOpen(false);
   };

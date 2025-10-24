@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 interface Product {
   id: string;
@@ -14,15 +15,8 @@ interface Product {
   stock: number;
 }
 
-const sampleProducts: Product[] = [
-  { id: '1', name: 'Premium Wireless Headphones', category: 'Electronics', price: 199.99, stock: 50 },
-  { id: '2', name: 'Bluetooth Speaker', category: 'Electronics', price: 89.99, stock: 120 },
-  { id: '3', name: 'Smartwatch', category: 'Wearables', price: 129.99, stock: 75 },
-  { id: '4', name: 'Designer T-Shirt', category: 'Apparel', price: 29.99, stock: 200 },
-];
-
 const ProductManagement: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
@@ -32,6 +26,26 @@ const ProductManagement: React.FC = () => {
     price: 0,
     stock: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('products').select('*');
+    if (error) {
+      console.error('Error fetching products:', error);
+      setError('Failed to fetch products.');
+      setProducts([]);
+    } else {
+      setProducts(data as Product[]);
+      setError(null);
+    }
+    setLoading(false);
+  };
 
   const handleAddProduct = () => {
     setIsEditMode(false);
@@ -52,11 +66,16 @@ const ProductManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteProduct = (productId: string) => {
+  const handleDeleteProduct = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      console.log('Deleted product:', productId);
-      // Implement API call to delete product
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) {
+        console.error('Error deleting product:', error);
+        setError('Failed to delete product.');
+      } else {
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+        setError(null);
+      }
     }
   };
 
@@ -69,22 +88,29 @@ const ProductManagement: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: name === 'price' || name === 'stock' ? parseFloat(value) : value }));
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditMode && currentProduct) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === currentProduct.id ? { ...p, ...formData, id: p.id } : p))
-      );
-      console.log('Updated product:', { ...currentProduct, ...formData });
-      // Implement API call to update product
+      const { error } = await supabase
+        .from('products')
+        .update(formData)
+        .eq('id', currentProduct.id);
+      if (error) {
+        console.error('Error updating product:', error);
+        setError('Failed to update product.');
+      } else {
+        fetchProducts(); // Re-fetch products to get the updated list
+        setError(null);
+      }
     } else {
-      const newProduct: Product = {
-        id: (products.length + 1).toString(), // Simple ID generation
-        ...formData,
-      };
-      setProducts((prev) => [...prev, newProduct]);
-      console.log('Added new product:', newProduct);
-      // Implement API call to add product
+      const { error } = await supabase.from('products').insert([formData]);
+      if (error) {
+        console.error('Error adding product:', error);
+        setError('Failed to add product.');
+      } else {
+        fetchProducts(); // Re-fetch products to get the new product
+        setError(null);
+      }
     }
     setIsModalOpen(false);
   };

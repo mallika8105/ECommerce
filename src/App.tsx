@@ -29,16 +29,22 @@ import OrdersManagement from './admin/OrdersManagement';
 import UserManagement from './admin/UserManagement';
 import ReportsPage from './admin/ReportsPage';
 import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
+import ProtectedRoute from './admin/ProtectedRoute'; // Import ProtectedRoute
 // import AdminSidebar from './admin/AdminSidebar'; // AdminSidebar is not directly used in App.tsx's main render
 import { CartProvider, useCart } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 import CartDrawer from './components/CartDrawer'; // Import CartDrawer
 import Layout from './components/Layout'; // Import Layout component
 function App() {
   return (
     <ErrorBoundary>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
+      <Router>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   );
 }
@@ -47,7 +53,7 @@ const AppContent: React.FC = () => {
   const { isDrawerOpen, toggleDrawer } = useCart();
 
   return (
-    <Router>
+    <>
       <Routes>
         <Route element={<Layout />}>
           {/* Public Routes */}
@@ -61,7 +67,6 @@ const AppContent: React.FC = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} /> {/* Add route for DashboardPage */}
           <Route path="/collections" element={<CollectionsPage />} /> {/* Add route for CollectionsPage */}
           <Route path="/products/category/:categoryId" element={<CategoryPage />} /> {/* Dynamic route for categories */}
           <Route path="/bestsellers" element={<BestsellerPage />} /> {/* Add route for BestsellerPage */}
@@ -72,13 +77,15 @@ const AppContent: React.FC = () => {
         </Route>
 
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />}>
-            <Route index element={<AdminDashboardHome />} /> {/* Default admin route */}
-            <Route path="dashboard" element={<AdminDashboardHome />} />
-            <Route path="products" element={<ProductManagement />} />
-            <Route path="orders" element={<OrdersManagement />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="reports" element={<ReportsPage />} />
+          <Route path="/admin" element={<ProtectedRoute adminOnly={true} />}>
+            <Route element={<AdminDashboard />}>
+              <Route index element={<AdminDashboardHome />} /> {/* Default admin route */}
+              <Route path="dashboard" element={<AdminDashboardHome />} />
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="orders" element={<OrdersManagement />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="reports" element={<ReportsPage />} />
+            </Route>
           </Route>
 
           {/* Fallback for unknown routes */}
@@ -91,7 +98,7 @@ const AppContent: React.FC = () => {
           } />
         </Routes>
       <CartDrawer isOpen={isDrawerOpen} onClose={toggleDrawer} />
-    </Router>
+    </>
   );
 }
 

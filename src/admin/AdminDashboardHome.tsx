@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-// import { Link } from 'react-router-dom'; // Link is not used in this component
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 interface StatCardProps {
   title: string;
@@ -11,10 +11,38 @@ interface StatCardProps {
   percentageColor: string;
   period: string;
   trendValue?: string;
-  icon?: React.ReactNode; // Make icon optional as some cards don't have it
-  bgColor?: string; // Make bgColor optional as it's not always a direct prop
+  icon?: React.ReactNode;
+  bgColor?: string;
 }
 
+interface SummaryChartDataItem {
+  name: string;
+  order: number;
+  incomeGrowth: number;
+}
+
+interface MostSellingProduct {
+  image: string;
+  name: string;
+  id: string;
+  sales: string;
+}
+
+interface RecentOrder {
+  productImage: string;
+  productName: string;
+  customer: string;
+  orderId: string;
+  date: string;
+  status: string;
+  statusColor: string;
+}
+
+interface WeeklyTopCustomer {
+  avatar: string;
+  name: string;
+  orders: number;
+}
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, percentage, percentageColor, trendValue }) => (
   <Card className="p-4 flex flex-col justify-between h-32 rounded-lg shadow-sm border border-gray-200">
@@ -28,41 +56,150 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, percentage, percentag
   </Card>
 );
 
-const summaryChartData = [
-  { name: 'Sep 07', order: 5000, incomeGrowth: 3000 },
-  { name: 'Sep 08', order: 7000, incomeGrowth: 5000 },
-  { name: 'Sep 09', order: 6000, incomeGrowth: 4000 },
-  { name: 'Sep 10', order: 8000, incomeGrowth: 6000 },
-  { name: 'Sep 11', order: 7500, incomeGrowth: 5500 },
-  { name: 'Sep 12', order: 9000, incomeGrowth: 7000 },
-  { name: 'Sep 13', order: 8500, incomeGrowth: 6500 },
-];
-
-const mostSellingProducts = [
-  { image: 'https://via.placeholder.com/40', name: 'Snicker Vento', id: '2441310', sales: '128' },
-  { image: 'https://via.placeholder.com/40', name: 'Blue Backpack', id: '1241318', sales: '401' },
-  { image: 'https://via.placeholder.com/40', name: 'Water Bottle', id: '8441573', sales: '1K+' },
-];
-
-const recentOrders = [
-  { productImage: 'https://via.placeholder.com/32', productName: 'Water Bottle', customer: 'Peterson Jack', orderId: '#8441573', date: '27 Jun 2025', status: 'Pending', statusColor: 'bg-yellow-100 text-yellow-800' },
-  { productImage: 'https://via.placeholder.com/32', productName: 'Iphone 15 Pro', customer: 'Michel Datta', orderId: '#2457841', date: '26 Jun 2025', status: 'Canceled', statusColor: 'bg-red-100 text-red-800' },
-  { productImage: 'https://via.placeholder.com/32', productName: 'Headphone', customer: 'Jesiya Rose', orderId: '#1024784', date: '20 Jun 2025', status: 'Shipped', statusColor: 'bg-green-100 text-green-800' },
-];
-
-const weeklyTopCustomers = [
-  { avatar: 'https://via.placeholder.com/40', name: 'Marks Hoverson', orders: 25 },
-  { avatar: 'https://via.placeholder.com/40', name: 'Marks Hoverson', orders: 15 },
-  { avatar: 'https://via.placeholder.com/40', name: 'Jhony Peters', orders: 23 },
-];
-
 const AdminDashboardHome: React.FC = () => {
+  const [summaryChartData, setSummaryChartData] = useState<SummaryChartDataItem[]>([]);
+  const [mostSellingProducts, setMostSellingProducts] = useState<MostSellingProduct[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [weeklyTopCustomers, setWeeklyTopCustomers] = useState<WeeklyTopCustomer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch summary chart data (example: total sales and new users over time)
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('created_at, total')
+        .order('created_at', { ascending: true });
+
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles') // Assuming 'profiles' table has user creation date
+        .select('created_at')
+        .order('created_at', { ascending: true });
+
+      if (ordersError) throw ordersError;
+      if (usersError) throw usersError;
+
+      // Process data for summary chart
+      const processedChartData = processChartData(ordersData, usersData);
+      setSummaryChartData(processedChartData);
+
+      // Fetch most selling products (example: top 3 products by quantity sold)
+      const { data: productSalesData, error: productSalesError } = await supabase
+        .from('order_items') // Assuming an 'order_items' table links orders to products
+        .select('product_id, quantity, products(name, image_url)') // Join with products table
+        .limit(3);
+
+      if (productSalesError) throw productSalesError;
+
+      const processedMostSellingProducts = processMostSellingProducts(productSalesData);
+      setMostSellingProducts(processedMostSellingProducts);
+
+      // Fetch recent orders
+      const { data: recentOrdersData, error: recentOrdersError } = await supabase
+        .from('orders')
+        .select('id, customer_name, created_at, status, total, order_items(product_id, product_name, quantity, price)')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (recentOrdersError) throw recentOrdersError;
+
+      const processedRecentOrders = processRecentOrders(recentOrdersData);
+      setRecentOrders(processedRecentOrders);
+
+      // Fetch weekly top customers (example: customers with most orders in the last 7 days)
+      const { data: topCustomersData, error: topCustomersError } = await supabase
+        .from('orders')
+        .select('customer_id, profiles(name, avatar_url)') // Assuming customer_id links to profiles
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()); // Last 7 days
+
+      if (topCustomersError) throw topCustomersError;
+
+      const processedTopCustomers = processTopCustomers(topCustomersData);
+      setWeeklyTopCustomers(processedTopCustomers);
+
+    } catch (err: any) {
+      console.error('Error fetching dashboard data:', err.message);
+      setError('Failed to load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper functions to process data (implement these based on your data structure)
+  const processChartData = (orders: any[], users: any[]) => {
+    // This is a simplified example. You'd aggregate sales and new users by day/week.
+    return [
+      { name: 'Day 1', order: 100, incomeGrowth: 50 },
+      { name: 'Day 2', order: 150, incomeGrowth: 70 },
+      { name: 'Day 3', order: 120, incomeGrowth: 60 },
+      { name: 'Day 4', order: 200, incomeGrowth: 90 },
+      { name: 'Day 5', order: 180, incomeGrowth: 80 },
+    ];
+  };
+
+  const processMostSellingProducts = (productSales: any[]) => {
+    // Aggregate sales for each product and sort
+    return [
+      { image: 'https://via.placeholder.com/40', name: 'Product A', id: '1', sales: '150' },
+      { image: 'https://via.placeholder.com/40', name: 'Product B', id: '2', sales: '120' },
+      { image: 'https://via.placeholder.com/40', name: 'Product C', id: '3', sales: '90' },
+    ];
+  };
+
+  const processRecentOrders = (orders: any[]) => {
+    return orders.map((order: any) => ({
+      productImage: order.order_items[0]?.product_image_url || 'https://via.placeholder.com/32', // Assuming first item's image
+      productName: order.order_items[0]?.product_name || 'N/A',
+      customer: order.customer_name,
+      orderId: `#${order.id}`,
+      date: new Date(order.created_at).toLocaleDateString(),
+      status: order.status,
+      statusColor: getStatusColor(order.status),
+    }));
+  };
+
+  const processTopCustomers = (customers: any[]) => {
+    // Aggregate orders by customer
+    return [
+      { avatar: 'https://via.placeholder.com/40', name: 'Customer X', orders: 10 },
+      { avatar: 'https://via.placeholder.com/40', name: 'Customer Y', orders: 8 },
+      { avatar: 'https://via.placeholder.com/40', name: 'Customer Z', orders: 7 },
+    ];
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Delivered': return 'bg-green-100 text-green-800';
+      case 'Shipped': return 'bg-blue-100 text-blue-800';
+      case 'Processing': return 'bg-yellow-100 text-yellow-800';
+      case 'Cancelled': return 'bg-red-100 text-red-800';
+      case 'Pending':
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6 text-center">Loading dashboard data...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-center text-red-500">Error: {error}</div>;
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Welcome Back, Mahfuzul!</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Welcome Back, Admin!</h1>
           <p className="text-sm text-gray-600">Here's what happening with your store today</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -78,7 +215,7 @@ const AdminDashboardHome: React.FC = () => {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard
           title="Ecommerce Revenue"
-          value="$245,450"
+          value="$245,450" // This should also be dynamic
           percentage="14.9%"
           percentageColor="text-green-500"
           period=""
@@ -86,7 +223,7 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="New Customers"
-          value="684"
+          value="684" // This should also be dynamic
           percentage="8.6%"
           percentageColor="text-red-500"
           period=""
@@ -94,7 +231,7 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="Repeat Purchase Rate"
-          value="75.12 %"
+          value="75.12 %" // This should also be dynamic
           percentage="25.4%"
           percentageColor="text-green-500"
           period=""
@@ -102,7 +239,7 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="Average Order Value"
-          value="$2,412.23"
+          value="$2,412.23" // This should also be dynamic
           percentage="35.2%"
           percentageColor="text-green-500"
           period=""
@@ -110,7 +247,7 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="Conversion rate"
-          value="32.65 %"
+          value="32.65 %" // This should also be dynamic
           percentage="12.42%"
           percentageColor="text-red-500"
           period=""
