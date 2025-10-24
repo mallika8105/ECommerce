@@ -26,9 +26,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
   };
 
   return (
-    <Card className="product-card" onClick={handleCardClick}> {/* Make the entire card clickable */}
+    <Card className="product-card" onClick={handleCardClick}>
       {rank && <div className="product-rank">#{rank}</div>}
-      <img src={product.image} alt={product.name} className="product-card-image" />
+      <div className="product-card-image-container">
+        <img src={product.image} alt={product.name} className="product-card-image" />
+      </div>
       <div className="product-card-details">
         <h3 className="product-card-name">
           <a href={`/products/${product.id}`} onClick={handleCardClick} className="product-name-link">

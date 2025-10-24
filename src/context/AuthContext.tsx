@@ -21,49 +21,114 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    console.log("AuthContext: useEffect started. Initial loading state:", loading);
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        try {
-          setSession(session);
-          setUser(session?.user || null);
-          if (session?.user) {
-            await checkAdminStatus(session.user.id);
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        // First check for mock admin session
+        const adminLoggedIn = localStorage.getItem('adminLoggedIn');
+        if (adminLoggedIn === 'true') {
+          const mockUser: User = {
+            id: 'mock-admin-id',
+            email: 'admin@example.com',
+            app_metadata: { provider: 'email' },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            user_metadata: { role: 'admin' },
+          };
+          
+          const mockSession: Session = {
+            access_token: 'mock-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'mock-refresh-token',
+            user: mockUser,
+            expires_at: Date.now() + 3600000,
+          };
+          
+          setUser(mockUser);
+          setSession(mockSession);
+          setIsAdmin(true);
+          setLoading(false);
+          return; // Exit early as we've restored the mock admin session
+        }
+
+        // Check for existing Supabase session
+        const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (existingSession?.user) {
+          setSession(existingSession);
+          setUser(existingSession.user);
+          
+          // Check for admin status in user metadata first
+          if (existingSession.user.user_metadata?.role === 'admin') {
+            setIsAdmin(true);
           } else {
-            setIsAdmin(false);
+            // Fallback to profiles table check
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', existingSession.user.id)
+              .single();
+            
+            setIsAdmin(profile?.role?.toLowerCase() === 'admin');
           }
-        } catch (error) {
-          console.error("Error in onAuthStateChange callback:", error);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Only clear everything if there's no admin session
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
           setUser(null);
           setSession(null);
           setIsAdmin(false);
-        } finally {
-          setLoading(false);
-          console.log("AuthContext: onAuthStateChange callback finished. Loading set to false.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, currentSession) => {
+        // Don't override mock admin session
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+          return;
+        }
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          // Check user metadata first
+          if (currentSession.user.user_metadata?.role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', currentSession.user.id)
+                .single();
+              
+              setIsAdmin(profile?.role?.toLowerCase() === 'admin');
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+              setIsAdmin(false);
+            }
+          }
+        } else {
+          setIsAdmin(false);
         }
       }
     );
 
-    // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-      if (session?.user) {
-        await checkAdminStatus(session.user.id);
-      }
-    }).catch((error) => {
-      console.error("Error getting initial session:", error);
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-    }).finally(() => {
-      setLoading(false); // Ensure loading is always set to false
-      console.log("AuthContext: Initial session check finished. Loading set to false.");
-    });
+    // Initialize
+    initializeAuth();
 
+    // Cleanup
     return () => {
       subscription.unsubscribe();
-      console.log("AuthContext: useEffect cleanup. Subscription unsubscribed.");
     };
   }, []);
 
@@ -92,55 +157,84 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    console.log("AuthContext: signIn started. Loading set to true.");
     try {
-      // Mock admin authentication
+      // Handle mock admin authentication
       if (email === 'admin@example.com' && password === 'Admin@123') {
-        // Simulate a user object for the mock admin
         const mockUser: User = {
           id: 'mock-admin-id',
           email: 'admin@example.com',
           app_metadata: { provider: 'email' },
           aud: 'authenticated',
           created_at: new Date().toISOString(),
-          user_metadata: {},
+          user_metadata: { role: 'admin' },
         };
+        
+        // Set mock session with 24-hour expiry
+        const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
+        const mockSession: Session = {
+          access_token: 'mock-token',
+          token_type: 'bearer',
+          expires_in: 24 * 60 * 60, // 24 hours in seconds
+          refresh_token: 'mock-refresh-token',
+          user: mockUser,
+          expires_at: expiresAt,
+        };
+        
+        // Store session details
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminSessionExpiresAt', expiresAt.toString());
+        
         setUser(mockUser);
-        setIsAdmin(true); // Directly set isAdmin for mock admin
+        setSession(mockSession);
+        setIsAdmin(true);
         return { user: mockUser, error: null };
       }
 
-      // Actual Supabase authentication for other users
+      // Regular user authentication
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        console.error('Login error:', error.message);
-        return { user: null, error: new Error(error.message) };
+        throw new Error(error.message);
       }
-      setUser(data.user);
+
       if (data.user) {
+        setUser(data.user);
+        setSession(data.session);
         await checkAdminStatus(data.user.id);
       }
+
       return { user: data.user, error: null };
     } catch (err: any) {
       console.error('Login error:', err.message);
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      localStorage.removeItem('adminLoggedIn');
       return { user: null, error: new Error(err.message) };
     } finally {
       setLoading(false);
-      console.log("AuthContext: signIn finished. Loading set to false.");
     }
   };
 
   const signOut = async () => {
     setLoading(true);
-    console.log("AuthContext: signOut started. Loading set to true.");
     try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error('Logout error:', error.message);
-        return { error: new Error(error.message) };
+      // Clear mock admin session if it exists
+      if (localStorage.getItem('adminLoggedIn')) {
+        localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminSessionExpiresAt');
+        setUser(null);
+        setSession(null);
+        setIsAdmin(false);
+        return { error: null };
       }
+
+      // Regular user signout
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw new Error(error.message);
+      }
+
       setUser(null);
       setSession(null);
       setIsAdmin(false);
@@ -150,7 +244,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { error: new Error(err.message) };
     } finally {
       setLoading(false);
-      console.log("AuthContext: signOut finished. Loading set to false.");
     }
   };
 

@@ -9,6 +9,7 @@ const AdminSidebar: React.FC = () => {
     { path: "/admin/dashboard", icon: <Home size={20} />, label: "Dashboard" },
     { path: "/admin/users", icon: <Users size={20} />, label: "User Management" },
     { path: "/admin/products", icon: <ShoppingBag size={20} />, label: "Product Management" },
+    { path: "/admin/categories", icon: <ShoppingBag size={20} />, label: "Categories" },
     { path: "/admin/orders", icon: <Package size={20} />, label: "Order Management" },
     { path: "/admin/reports", icon: <BarChart2 size={20} />, label: "Reports" },
   ];
@@ -22,8 +23,13 @@ const AdminSidebar: React.FC = () => {
     <aside className="w-64 bg-white shadow-lg p-4 flex flex-col h-screen fixed top-0 left-0">
       <div className="mb-6 pb-4 border-b border-gray-200 text-center">
         <Link to="/admin/dashboard" className="text-xl font-bold text-gray-800 flex items-center justify-center">
-          <img src="/vite.svg" alt="Creative Tim Logo" className="h-8 w-8 mr-2" /> {/* Placeholder logo */}
-          Creative Tim
+          <svg width="24" height="24" viewBox="0 0 24 24" className="h-8 w-8 mr-2 text-blue-600">
+            <path
+              fill="currentColor"
+              d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+            />
+          </svg>
+          NexBuy
         </Link>
       </div>
       <nav className="flex-grow">

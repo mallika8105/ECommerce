@@ -25,11 +25,13 @@ import TermsOfServicePage from './pages/TermsOfServicePage'; // Import TermsOfSe
 // Admin Pages
 import AdminDashboardHome from './admin/AdminDashboardHome';
 import ProductManagement from './admin/ProductManagement';
+import CategoryManagement from './admin/CategoryManagement';
 import OrdersManagement from './admin/OrdersManagement';
 import UserManagement from './admin/UserManagement';
 import ReportsPage from './admin/ReportsPage';
 import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
 import ProtectedRoute from './admin/ProtectedRoute'; // Import ProtectedRoute
+import AdminLoginPage from './admin/AdminLoginPage';
 // import AdminSidebar from './admin/AdminSidebar'; // AdminSidebar is not directly used in App.tsx's main render
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
@@ -55,8 +57,24 @@ const AppContent: React.FC = () => {
   return (
     <>
       <Routes>
+        {/* Admin Routes - Outside main layout to avoid header/footer */}
+        <Route path="/admin">
+          <Route index element={<AdminLoginPage />} />
+          <Route path="login" element={<AdminLoginPage />} />
+          <Route element={<ProtectedRoute adminOnly={true} />}>
+            <Route element={<AdminDashboard />}>
+                <Route path="dashboard" element={<AdminDashboardHome />} />
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="categories" element={<CategoryManagement />} />
+                <Route path="orders" element={<OrdersManagement />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="reports" element={<ReportsPage />} />
+            </Route>
+          </Route>
+        </Route>
+
+        {/* Public Routes - With header/footer layout */}
         <Route element={<Layout />}>
-          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ProductListing />} />
           <Route path="/product/:productId" element={<ProductDetails />} />
@@ -67,28 +85,16 @@ const AppContent: React.FC = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/collections" element={<CollectionsPage />} /> {/* Add route for CollectionsPage */}
-          <Route path="/products/category/:categoryId" element={<CategoryPage />} /> {/* Dynamic route for categories */}
-          <Route path="/bestsellers" element={<BestsellerPage />} /> {/* Add route for BestsellerPage */}
-          <Route path="/about-us" element={<AboutUsPage />} /> {/* Add route for AboutUsPage */}
-          <Route path="/contact-us" element={<ContactUsPage />} /> {/* Add route for ContactUsPage */}
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} /> {/* Add route for PrivacyPolicyPage */}
-          <Route path="/terms-of-service" element={<TermsOfServicePage />} /> {/* Add route for TermsOfServicePage */}
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/products/category/:categoryId" element={<CategoryPage />} />
+          <Route path="/bestsellers" element={<BestsellerPage />} />
+          <Route path="/about-us" element={<AboutUsPage />} />
+          <Route path="/contact-us" element={<ContactUsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute adminOnly={true} />}>
-            <Route element={<AdminDashboard />}>
-              <Route index element={<AdminDashboardHome />} /> {/* Default admin route */}
-              <Route path="dashboard" element={<AdminDashboardHome />} />
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="orders" element={<OrdersManagement />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="reports" element={<ReportsPage />} />
-            </Route>
-          </Route>
-
-          {/* Fallback for unknown routes */}
+        {/* Fallback for unknown routes */}
           <Route path="*" element={
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
               <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
