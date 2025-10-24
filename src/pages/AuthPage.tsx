@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
@@ -34,7 +32,6 @@ const AuthPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <main className="flex-grow container mx-auto p-4 flex items-center justify-center">
         <Card className="p-8 max-w-md w-full">
           <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
@@ -93,7 +90,6 @@ const AuthPage: React.FC = () => {
           </div>
         </Card>
       </main>
-      <Footer />
     </div>
   );
 };

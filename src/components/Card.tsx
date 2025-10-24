@@ -1,4 +1,5 @@
 import React from 'react';
+import './Card.css'; // Import the custom CSS file
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -8,7 +9,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card: React.FC<CardProps> = ({ children, className = '', ...props }) => {
   return (
     <div
-      className={`bg-white shadow-md rounded-lg p-4 ${className}`}
+      className={`card ${className}`}
       {...props}
     >
       {children}

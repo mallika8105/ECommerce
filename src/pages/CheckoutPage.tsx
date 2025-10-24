@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
+import { useCart } from '../context/CartContext'; // Import useCart
+import './CheckoutPage.css'; // Import the custom CSS file
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-const cartItems: CartItem[] = [
-  { id: '1', name: 'Premium Wireless Headphones', price: 199.99, quantity: 1 },
-  { id: '2', name: 'Bluetooth Speaker', price: 89.99, quantity: 2 },
-];
+// The Product interface from CartContext is sufficient, no need for a separate CartItem here.
 
 const CheckoutPage: React.FC = () => {
+  const { cartItems } = useCart(); // Use cartItems from CartContext
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
     addressLine1: '',
@@ -29,7 +20,7 @@ const CheckoutPage: React.FC = () => {
   });
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const shipping = 10.00; // Placeholder
   const total = subtotal + shipping;
 
@@ -48,107 +39,111 @@ const CheckoutPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow container mx-auto p-4">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Checkout</h1>
+    <div className="checkout-container">
+      <main className="checkout-main">
+        <h1 className="checkout-title">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="checkout-grid">
           {/* Shipping Address & Payment */}
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Shipping Address</h2>
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Full Name" name="fullName" value={shippingAddress.fullName} onChange={handleAddressChange} />
-                <Input label="Address Line 1" name="addressLine1" value={shippingAddress.addressLine1} onChange={handleAddressChange} />
-                <Input label="Address Line 2 (Optional)" name="addressLine2" value={shippingAddress.addressLine2} onChange={handleAddressChange} />
-                <Input label="City" name="city" value={shippingAddress.city} onChange={handleAddressChange} />
-                <Input label="State/Province" name="state" value={shippingAddress.state} onChange={handleAddressChange} />
-                <Input label="Zip/Postal Code" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} />
-                <Input label="Country" name="country" value={shippingAddress.country} onChange={handleAddressChange} />
+          <div className="shipping-payment-section">
+            <Card className="shipping-address-card">
+              <h2 className="card-title">Shipping Address</h2>
+              <form className="address-form">
+                <Input label="Full Name" name="fullName" value={shippingAddress.fullName} onChange={handleAddressChange} className="text-sm" />
+                <Input label="Address Line 1" name="addressLine1" value={shippingAddress.addressLine1} onChange={handleAddressChange} className="text-sm" />
+                <Input label="Address Line 2 (Optional)" name="addressLine2" value={shippingAddress.addressLine2} onChange={handleAddressChange} className="text-sm" />
+                <Input label="City" name="city" value={shippingAddress.city} onChange={handleAddressChange} className="text-sm" />
+                <Input label="State/Province" name="state" value={shippingAddress.state} onChange={handleAddressChange} className="text-sm" />
+                <Input label="Zip/Postal Code" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} className="text-sm" />
+                <Input label="Country" name="country" value={shippingAddress.country} onChange={handleAddressChange} className="text-sm" />
               </form>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Payment Method</h2>
-              <div className="space-y-4">
-                <label className="flex items-center">
+            <Card className="payment-method-card">
+              <h2 className="card-title">Payment Method</h2>
+              <div className="payment-options">
+                <label className="payment-option-label">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="credit-card"
                     checked={paymentMethod === 'credit-card'}
                     onChange={handlePaymentMethodChange}
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="payment-radio"
                   />
-                  <span className="ml-2 text-gray-700">Credit Card</span>
+                  <span className="ml-2">Credit Card</span>
                 </label>
                 {paymentMethod === 'credit-card' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
-                    <Input label="Card Number" placeholder="**** **** **** ****" />
-                    <Input label="Card Holder Name" />
-                    <Input label="Expiry Date" placeholder="MM/YY" />
-                    <Input label="CVV" placeholder="***" />
+                  <div className="payment-card-details">
+                    <Input label="Card Number" name="cardNumber" placeholder="**** **** **** ****" className="text-sm" />
+                    <Input label="Card Holder Name" name="cardHolderName" className="text-sm" />
+                    <Input label="Expiry Date" name="expiryDate" placeholder="MM/YY" className="text-sm" />
+                    <Input label="CVV" name="cvv" placeholder="***" className="text-sm" />
                   </div>
                 )}
-                <label className="flex items-center">
+                <label className="payment-option-label">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="paypal"
                     checked={paymentMethod === 'paypal'}
                     onChange={handlePaymentMethodChange}
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="payment-radio"
                   />
-                  <span className="ml-2 text-gray-700">PayPal</span>
+                  <span className="ml-2">PayPal</span>
                 </label>
-                <label className="flex items-center">
+                <label className="payment-option-label">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="bank-transfer"
                     checked={paymentMethod === 'bank-transfer'}
                     onChange={handlePaymentMethodChange}
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="payment-radio"
                   />
-                  <span className="ml-2 text-gray-700">Bank Transfer</span>
+                  <span className="ml-2">Bank Transfer</span>
                 </label>
               </div>
             </Card>
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Summary</h2>
-              <div className="space-y-2 mb-6">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex justify-between text-gray-700">
-                    <span>{item.name} (x{item.quantity})</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between border-t pt-2 mt-2">
-                  <span className="text-gray-700">Subtotal:</span>
-                  <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span>
+          <div>
+            <Card className="order-summary-card">
+              <h2 className="card-title">Order Summary</h2>
+              <div className="order-summary-details">
+                {cartItems.length === 0 ? (
+                  <p>Your cart is empty.</p>
+                ) : (
+                  cartItems.map((item) => (
+                    <div key={item.id} className="order-item">
+                      <img src={item.image_url} alt={item.name} className="w-12 h-12 object-contain rounded-md mr-2" /> {/* Changed to image_url */}
+                      <span>{item.name} (x{item.quantity})</span>
+                      <span>${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                    </div>
+                  ))
+                )}
+                <div className="order-summary-divider"></div>
+                <div className="order-summary-subtotal">
+                  <span>Subtotal:</span>
+                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-700">Shipping:</span>
-                  <span className="font-semibold text-gray-800">${shipping.toFixed(2)}</span>
+                <div className="order-summary-shipping">
+                  <span>Shipping:</span>
+                  <span className="font-semibold">${shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between border-t pt-2 mt-2">
-                  <span className="text-xl font-bold text-gray-800">Total:</span>
-                  <span className="text-xl font-bold text-gray-800">${total.toFixed(2)}</span>
+                <div className="order-summary-total">
+                  <span>Total:</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
               </div>
-              <Button variant="primary" className="w-full" onClick={handlePlaceOrder}>
+              <Button variant="primary" className="place-order-button" onClick={handlePlaceOrder}>
                 Place Order
               </Button>
             </Card>
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

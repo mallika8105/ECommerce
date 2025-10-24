@@ -14,9 +14,9 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const baseStyles = 'font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline';
   const variantStyles = {
-    primary: 'bg-blue-500 hover:bg-blue-700 text-white',
-    secondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800',
-    danger: 'bg-red-500 hover:bg-red-700 text-white',
+    primary: 'bg-black hover:bg-gray-800 text-white',
+    secondary: 'bg-gray-700 hover:bg-gray-800 text-white',
+    danger: 'bg-black hover:bg-gray-800 text-white',
   };
   const sizeStyles = {
     small: 'text-sm',

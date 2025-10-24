@@ -1,0 +1,19 @@
+.bestseller-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f8f8f8; /* Changed background to a lighter color */
+}
+
+.bestseller-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #000; /* Changed heading color to black for better visibility */
+  font-size: 2.5em;
+}
+
+.bestseller-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}

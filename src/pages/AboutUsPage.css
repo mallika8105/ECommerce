@@ -1,0 +1,143 @@
+.about-us-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 60px 5%; /* Adjusted padding for full width */
+  font-family: 'Georgia', serif; /* More elegant font */
+  color: #4a4a4a; /* Softer text color */
+  line-height: 1.8; /* Improved readability */
+  background-color: #fefefe; /* Slightly off-white background */
+}
+
+.about-us-title {
+  font-size: 3.5em; /* Larger title */
+  color: #2c3e50; /* Darker, more sophisticated title color */
+  text-align: center;
+  margin-bottom: 60px; /* More space below title */
+  position: relative;
+  font-weight: 700; /* Bolder title */
+  letter-spacing: 1px; /* Slight letter spacing */
+}
+
+.about-us-title::after {
+  content: '';
+  display: block;
+  width: 100px; /* Wider underline */
+  height: 3px; /* Thinner underline */
+  background-color: #a8dadc; /* Softer blue for underline */
+  margin: 15px auto 0;
+  border-radius: 2px; /* Slightly rounded underline */
+}
+
+.about-us-container section {
+  margin-bottom: 60px; /* More space between sections */
+  padding: 40px; /* Increased section padding */
+  background-color: #ffffff; /* White background for sections */
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* Deeper, softer shadow */
+  border: 1px solid #f0f0f0; /* Subtle border */
+}
+
+.about-us-container section h2 {
+  font-size: 2.2em; /* Larger section headings */
+  color: #1a535c; /* Dark teal for headings */
+  margin-bottom: 25px; /* More space below heading */
+  border-bottom: 1px solid #e0e0e0; /* Thinner, softer border */
+  padding-bottom: 15px;
+  font-weight: 600;
+}
+
+.about-us-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.about-us-container ul li {
+  margin-bottom: 18px; /* More space between list items */
+  padding-left: 30px; /* More padding for list items */
+  position: relative;
+  font-size: 1.1em;
+}
+
+.about-us-container ul li::before {
+  content: '•'; /* Elegant bullet point */
+  color: #457b9d; /* Muted blue for bullet */
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+  font-size: 1.5em; /* Larger bullet */
+  line-height: 1; /* Align bullet vertically */
+  top: 2px;
+}
+
+.about-us-contact a {
+  color: #457b9d; /* Muted blue for links */
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.about-us-contact a:hover {
+  text-decoration: underline;
+  color: #1a535c; /* Darker on hover */
+}
+
+.about-us-footer-links a {
+  color: #457b9d; /* Muted blue for links */
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.about-us-footer-links a:hover {
+  text-decoration: underline;
+  color: #1a535c; /* Darker on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-us-container {
+    padding: 40px 20px;
+  }
+  .about-us-title {
+    font-size: 2.8em;
+    margin-bottom: 40px;
+  }
+  .about-us-title::after {
+    width: 70px;
+  }
+  .about-us-container section h2 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+  }
+  .about-us-container section {
+    padding: 30px;
+    margin-bottom: 40px;
+  }
+  .about-us-container ul li {
+    font-size: 1em;
+    padding-left: 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-us-container {
+    padding: 30px 15px;
+  }
+  .about-us-title {
+    font-size: 2.2em;
+    margin-bottom: 30px;
+  }
+  .about-us-title::after {
+    width: 50px;
+  }
+  .about-us-container section h2 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+  }
+  .about-us-container section {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  .about-us-container ul li {
+    font-size: 0.95em;
+    padding-left: 20px;
+  }
+}

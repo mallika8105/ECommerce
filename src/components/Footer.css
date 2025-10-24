@@ -1,0 +1,111 @@
+/* src/components/Footer.css */
+
+.footer-container {
+  background-color: #000000; /* Black background */
+  color: #ffffff; /* White foreground */
+  padding: 1.5rem; /* p-6 */
+  margin-top: 2rem; /* mt-8 */
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06); /* subtle shadow */
+}
+
+@media (max-width: 767px) {
+  .footer-container {
+    padding: 1rem; /* Smaller padding for mobile */
+  }
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+  .footer-container {
+    padding: 2rem; /* md:p-8 */
+  }
+}
+
+.footer-content {
+  max-width: 1280px; /* container mx-auto */
+  margin-left: auto;
+  margin-right: auto;
+  display: grid;
+  grid-template-columns: 1fr; /* grid-cols-1 */
+  gap: 1.5rem; /* gap-6 for mobile */
+  text-align: center;
+}
+
+@media (min-width: 640px) { /* sm breakpoint */
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr); /* sm:grid-cols-2 */
+    gap: 2rem; /* sm:gap-8 */
+  }
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+  .footer-content {
+    grid-template-columns: repeat(3, 1fr); /* md:grid-cols-3 */
+    text-align: left; /* md:text-left */
+  }
+}
+
+.footer-section-title {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 1rem; /* mb-4 */
+  color: #ffffff; /* White foreground */
+}
+
+.footer-description {
+  color: #cccccc; /* Lighter white for description */
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.footer-links a {
+  color: #ffffff; /* White foreground */
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.footer-links a:hover {
+  color: #457b9d; /* Muted blue on hover */
+}
+
+.footer-social-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem; /* space-x-3 for mobile */
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+  .footer-social-links {
+    justify-content: flex-start; /* md:justify-start */
+    gap: 1rem; /* md:space-x-4 */
+  }
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+  .footer-social-links {
+    justify-content: flex-start; /* md:justify-start */
+  }
+}
+
+.footer-social-links a {
+  color: #ffffff; /* White foreground */
+  transition: color 0.2s ease-in-out;
+}
+
+.footer-social-links a:hover {
+  color: #cccccc; /* Lighter white on hover */
+}
+
+.footer-bottom-text {
+  border-top: 1px solid #333333; /* Darker gray border */
+  margin-top: 2rem; /* mt-8 */
+  padding-top: 2rem; /* pt-8 */
+  text-align: center;
+  color: #cccccc; /* Lighter white for copyright text */
+}

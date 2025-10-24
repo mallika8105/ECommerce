@@ -1,0 +1,66 @@
+/* Custom styles for CartDrawer */
+
+/* Example: If you need more complex transitions or specific overrides */
+.cart-drawer-enter {
+  transform: translateX(100%);
+}
+
+.cart-drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-in-out;
+}
+
+.cart-drawer-exit {
+  transform: translateX(0);
+}
+
+.cart-drawer-exit-active {
+  transform: translateX(100%);
+  transition: transform 300ms ease-in-out;
+}
+
+/* Custom scrollbar for the cart items */
+.cart-items-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cart-items-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.cart-items-scrollable::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.cart-items-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Custom styling for quantity buttons */
+.quantity-button {
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  background-color: #f3f4f6; /* bg-gray-100 */
+  color: #4b5563; /* text-gray-700 */
+  border-radius: 0.375rem; /* rounded-md */
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  font-size: 0.875rem; /* text-sm */
+}
+.quantity-button:hover {
+  background-color: #e5e7eb; /* hover:bg-gray-200 */
+}
+
+/* Custom styling for remove item button */
+.remove-item-button {
+  padding: 0.25rem; /* p-1 */
+  color: #9ca3af; /* text-gray-400 */
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.remove-item-button:hover {
+  color: #ef4444; /* hover:text-red-500 */
+}

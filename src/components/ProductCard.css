@@ -1,0 +1,81 @@
+.product-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.product-card-image {
+  width: 100%;
+  height: 180px;
+  object-fit: contain; /* Changed from 'cover' to 'contain' to ensure the entire image is visible */
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.product-card-details {
+  padding: 15px;
+}
+
+.product-card-name {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+}
+
+.product-name-link {
+  color: #333; /* Default color for the link */
+  text-decoration: none; /* Remove underline */
+}
+
+.product-name-link:hover {
+  text-decoration: underline; /* Add underline on hover */
+}
+
+.product-card-price {
+  font-size: 1.2em;
+  color: #007bff;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.product-card-rating {
+  color: #ffc107;
+  margin-bottom: 10px;
+}
+
+.product-card-button {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s;
+}
+
+.product-card-button:hover {
+  background-color: #0056b3;
+}
+
+.product-rank {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: brown; /* Changed to brown */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.product-card {
+  position: relative; /* Added to position the rank number correctly */
+}

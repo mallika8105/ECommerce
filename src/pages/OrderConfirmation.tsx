@@ -1,6 +1,4 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { CheckCircle } from 'lucide-react';
@@ -12,7 +10,6 @@ const OrderConfirmation: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <main className="flex-grow container mx-auto p-4 flex items-center justify-center">
         <Card className="p-8 text-center max-w-2xl w-full">
           <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
@@ -36,7 +33,6 @@ const OrderConfirmation: React.FC = () => {
           </div>
         </Card>
       </main>
-      <Footer />
     </div>
   );
 };

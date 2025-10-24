@@ -4,7 +4,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  image_url: string; // Changed to match database column name
   quantity?: number; // Made quantity optional
 }
 

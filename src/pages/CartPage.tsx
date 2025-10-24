@@ -1,6 +1,4 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import { useCart } from '../context/CartContext';
 import { Trash2 } from 'lucide-react';
@@ -15,7 +13,6 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <Navbar />
       <main className="flex-grow container mx-auto p-6">
         <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center">Your Shopping Cart</h1>
 
@@ -29,7 +26,7 @@ const CartPage: React.FC = () => {
             <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
               {cartItems.map((item) => (
                 <div key={item.id} className="flex items-center border-b border-gray-200 py-4 last:border-b-0">
-                  <img src={item.imageUrl} alt={item.name} className="w-24 h-24 object-contain rounded-md mr-4" />
+                  <img src={item.image_url} alt={item.name} className="w-24 h-24 object-contain rounded-md mr-4" />
                   <div className="flex-grow">
                     <h3 className="text-xl font-semibold text-gray-800">{item.name}</h3>
                     <p className="text-orange-600 font-bold text-lg">${item.price.toFixed(2)}</p>
@@ -82,7 +79,6 @@ const CartPage: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

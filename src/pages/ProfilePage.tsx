@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
+import './ProfilePage.css'; // Import the custom CSS file
 
 interface UserProfile {
   fullName: string;
@@ -49,8 +48,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow container mx-auto p-4">
+      <main className="flex-grow container mx-auto p-4 profile-page-main"> {/* Apply the new class */}
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">My Profile</h1>
 
         <div className="max-w-2xl mx-auto">
@@ -88,7 +86,6 @@ const ProfilePage: React.FC = () => {
           </Card>
         </div>
       </main>
-      <Footer />
 
       <Modal isOpen={isEditModalOpen} onClose={handleModalClose} title="Edit Profile">
         <form onSubmit={handleFormSubmit} className="space-y-4">

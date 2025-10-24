@@ -14,6 +14,13 @@ import ProfilePage from './pages/ProfilePage';
 import MyOrders from './pages/MyOrders';
 import WishlistPage from './pages/WishlistPage';
 import DashboardPage from './pages/DashboardPage'; // Import the new DashboardPage
+import CollectionsPage from './pages/CollectionsPage'; // Import CollectionsPage
+import CategoryPage from './pages/CategoryPage'; // Import CategoryPage
+import BestsellerPage from './pages/BestsellerPage'; // Import BestsellerPage
+import AboutUsPage from './pages/AboutUsPage'; // Import AboutUsPage
+import ContactUsPage from './pages/ContactUsPage'; // Import ContactUsPage
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
+import TermsOfServicePage from './pages/TermsOfServicePage'; // Import TermsOfServicePage
 
 // Admin Pages
 import AdminDashboardHome from './admin/AdminDashboardHome';
@@ -25,7 +32,7 @@ import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
 import AdminSidebar from './admin/AdminSidebar'; // Import AdminSidebar
 import { CartProvider, useCart } from './context/CartContext';
 import CartDrawer from './components/CartDrawer'; // Import CartDrawer
-
+import Layout from './components/Layout'; // Import Layout component
 function App() {
   return (
     <ErrorBoundary>
@@ -42,10 +49,11 @@ const AppContent: React.FC = () => {
   return (
     <Router>
       <Routes>
+        <Route element={<Layout />}>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductListing />} />
-          <Route path="/products/:id" element={<ProductDetails />} />
+          <Route path="/shop" element={<ProductListing />} />
+          <Route path="/product/:productId" element={<ProductDetails />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -54,6 +62,14 @@ const AppContent: React.FC = () => {
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/dashboard" element={<DashboardPage />} /> {/* Add route for DashboardPage */}
+          <Route path="/collections" element={<CollectionsPage />} /> {/* Add route for CollectionsPage */}
+          <Route path="/products/category/:categoryId" element={<CategoryPage />} /> {/* Dynamic route for categories */}
+          <Route path="/bestsellers" element={<BestsellerPage />} /> {/* Add route for BestsellerPage */}
+          <Route path="/about-us" element={<AboutUsPage />} /> {/* Add route for AboutUsPage */}
+          <Route path="/contact-us" element={<ContactUsPage />} /> {/* Add route for ContactUsPage */}
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} /> {/* Add route for PrivacyPolicyPage */}
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} /> {/* Add route for TermsOfServicePage */}
+        </Route>
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />}>

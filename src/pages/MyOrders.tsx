@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
@@ -74,7 +72,6 @@ const MyOrders: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <main className="flex-grow container mx-auto p-4">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">My Orders</h1>
 
@@ -101,7 +98,6 @@ const MyOrders: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
 
       {selectedOrder && (
         <Modal isOpen={isModalOpen} onClose={handleModalClose} title={`Order Details #${selectedOrder.id}`}>

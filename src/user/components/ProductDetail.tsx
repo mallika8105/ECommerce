@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // Assuming react-router-dom is used for routing
 import ReviewsSection from './ReviewsSection'; // Import ReviewsSection component
-import './ProductDetail.css'; // Assuming ProductDetail.css will be created
 
 // Placeholder for product data structure
 interface Product {

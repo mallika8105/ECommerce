@@ -1,11 +1,8 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 const DashboardPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <Navbar />
       <main className="flex-grow container mx-auto p-4 md:p-6">
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-6 md:mb-8 text-center">Dashboard</h1>
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -27,7 +24,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

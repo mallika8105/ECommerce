@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './ReviewsSection.css'; // Assuming ReviewsSection.css will be created
 
 interface Review {
   user: string;

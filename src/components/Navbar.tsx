@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useState, useEffect } from 'react';
 import LocationModal from './LocationModal';
+import './Navbar.css'; // Import the custom CSS file
 
 const Navbar: React.FC = () => {
   const { cartItems, toggleDrawer } = useCart();
@@ -38,88 +39,88 @@ const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <nav className="bg-gray-800 p-6 text-white shadow-lg relative z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-3xl font-extrabold text-orange-400 hover:text-orange-300 transition-colors duration-200">NexBuy</Link>
-
+    <nav className="navbar">
+      <div className="navbar-container">
         {/* Desktop Navigation and Utility Icons */}
-        <div className="hidden md:flex items-center flex-grow justify-end space-x-6">
-          <Link to="/" className="text-lg hover:text-orange-300 transition-colors duration-200">Home</Link>
-          <Link to="/shop" className="text-lg hover:text-orange-300 transition-colors duration-200">Shop</Link>
-          <Link to="/collections" className="text-lg hover:text-orange-300 transition-colors duration-200">Collections</Link>
-          <Link to="/best-sellers" className="text-lg hover:text-orange-300 transition-colors duration-200">Best Sellers</Link>
-          <Link to="/about-us" className="text-lg hover:text-orange-300 transition-colors duration-200">About us</Link>
-          <div className="relative">
+        <div className="navbar-desktop-menu">
+          <Link to="/" className="navbar-brand">NexBuy</Link>
+          <Link to="/" className="navbar-link">Home</Link>
+          <Link to="/shop" className="navbar-link">Shop</Link>
+          <Link to="/collections" className="navbar-link">Collections</Link>
+          <Link to="/bestsellers" className="navbar-link">Bestsellers</Link>
+          <Link to="/about-us" className="navbar-link">About us</Link>
+          <div className="search-container">
             <input
               type="text"
               placeholder="Search products..."
-              className="bg-gray-700 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400"
+              className="search-input"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="search-icon" size={20} />
           </div>
-          <Link to="/profile" className="flex items-center space-x-2 hover:text-orange-300 transition-colors duration-200">
-            <User size={24} />
-            <span className="text-lg">Account</span>
+          <Link to="/profile" className="account-link">
+            <User className="account-icon" size={24} />
+            <span className="account-text">Account</span>
           </Link>
-          <div className="relative flex items-center space-x-2 cursor-pointer hover:text-orange-300 transition-colors duration-200" onClick={toggleDrawer}>
-            <ShoppingCart size={24} />
-            <span className="text-lg">Cart</span>
+          <div className="cart-container" onClick={toggleDrawer}>
+            <ShoppingCart className="cart-icon" size={24} />
+            <span className="cart-text">Cart</span>
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="cart-badge">
                 {totalItems}
               </span>
             )}
           </div>
-          <div className="flex items-center space-x-1 cursor-pointer hover:text-gray-300 transition-colors duration-200" onClick={handleLocationClick}>
-            <MapPin size={20} />
-            <div className="flex flex-col text-sm">
-              <span className="text-gray-400">Deliver to</span>
-              <span className="font-bold">{deliveryLocation}</span>
+          <div className="location-container" onClick={handleLocationClick}>
+            <MapPin className="location-icon" size={20} />
+            <div className="location-text-container">
+              <span className="location-label">Deliver to</span>
+              <span className="location-value">{deliveryLocation}</span>
             </div>
           </div>
         </div>
 
-        {/* Mobile menu button and Cart icon */}
-        <div className="md:hidden flex items-center space-x-4">
-          <div className="relative flex items-center cursor-pointer text-white hover:text-orange-300 transition-colors duration-200" onClick={toggleDrawer}>
-            <ShoppingCart size={28} />
+        {/* Mobile menu button, Brand, and Cart icon */}
+        <div className="mobile-header-row">
+          <button onClick={toggleMobileMenu} className="mobile-menu-button">
+            {isMobileMenuOpen ? <X className="close-icon" size={28} /> : <Menu className="menu-icon" size={28} />}
+          </button>
+          <Link to="/" className="navbar-brand">NexBuy</Link>
+          <div className="cart-container" onClick={toggleDrawer}>
+            <ShoppingCart className="mobile-cart-icon" size={28} />
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="cart-badge">
                 {totalItems}
               </span>
             )}
           </div>
-          <button onClick={toggleMobileMenu} className="text-white focus:outline-none">
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
         </div>
       </div>
 
       {/* Mobile Menu Content */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-gray-800 p-4 flex flex-col space-y-4 absolute top-full left-0 w-full z-40">
+        <div className="mobile-menu-content">
           <div className="relative w-full">
             <input
               type="text"
               placeholder="Search products..."
-              className="bg-gray-700 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400 w-full"
+              className="mobile-search-input"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="mobile-search-icon" size={20} />
           </div>
-          <Link to="/" className="text-lg hover:text-orange-300 transition-colors duration-200">Home</Link>
-          <Link to="/shop" className="text-lg hover:text-orange-300 transition-colors duration-200">Shop</Link>
-          <Link to="/collections" className="text-lg hover:text-orange-300 transition-colors duration-200">Collections</Link>
-          <Link to="/best-sellers" className="text-lg hover:text-orange-300 transition-colors duration-200">Best Sellers</Link>
-          <Link to="/about-us" className="text-lg hover:text-orange-300 transition-colors duration-200">About us</Link>
-          <Link to="/profile" className="flex items-center space-x-2 hover:text-orange-300 transition-colors duration-200">
-            <User size={24} />
-            <span className="text-lg">Account</span>
+          <Link to="/" className="mobile-nav-link">Home</Link>
+          <Link to="/shop" className="mobile-nav-link">Shop</Link>
+          <Link to="/collections" className="mobile-nav-link">Collections</Link>
+          <Link to="/bestsellers" className="mobile-nav-link">Bestsellers</Link>
+          <Link to="/about-us" className="mobile-nav-link">About us</Link>
+          <Link to="/profile" className="mobile-account-link">
+            <User className="mobile-account-icon" size={24} />
+            <span className="mobile-account-text">Account</span>
           </Link>
-          <div className="flex items-center space-x-1 cursor-pointer hover:text-gray-300 transition-colors duration-200" onClick={handleLocationClick}>
-            <MapPin size={20} />
-            <div className="flex flex-col text-sm">
-              <span className="text-gray-400">Deliver to</span>
-              <span className="font-bold">{deliveryLocation}</span>
+          <div className="mobile-location-container" onClick={handleLocationClick}>
+            <MapPin className="mobile-location-icon" size={20} />
+            <div className="mobile-location-text-container">
+              <span className="mobile-location-label">Deliver to</span>
+              <span className="mobile-location-value">{deliveryLocation}</span>
             </div>
           </div>
         </div>
