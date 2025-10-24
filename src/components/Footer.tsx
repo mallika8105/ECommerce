@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
       </div>
 
       <div className="footer-bottom-text">
-        &copy; {new Date().getFullYear()} E-commerce. All rights reserved.
+        &copy; {new Date().getFullYear()} NexBuy. All rights reserved.
       </div>
     </footer>
   );
