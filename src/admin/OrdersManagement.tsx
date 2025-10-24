@@ -89,32 +89,6 @@ const OrdersManagement: React.FC = () => {
     // Implement API call to update order status
   };
 
-  const getStatusBadge = (status: Order['status']) => {
-    let colorClass = '';
-    switch (status) {
-      case 'Delivered':
-        colorClass = 'bg-green-100 text-green-800';
-        break;
-      case 'Shipped':
-        colorClass = 'bg-blue-100 text-blue-800';
-        break;
-      case 'Processing':
-        colorClass = 'bg-yellow-100 text-yellow-800';
-        break;
-      case 'Cancelled':
-        colorClass = 'bg-red-100 text-red-800';
-        break;
-      case 'Pending':
-      default:
-        colorClass = 'bg-gray-100 text-gray-800';
-        break;
-    }
-    return (
-      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}`}>
-        {status}
-      </span>
-    );
-  };
 
   const getStatusIcon = (status: Order['status']) => {
     switch (status) {

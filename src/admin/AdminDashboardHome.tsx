@@ -1,8 +1,8 @@
 import React from 'react';
 import Card from '../components/Card';
-import { DollarSign, Users, ShoppingBag, CheckCircle, TrendingUp, Package, CreditCard, LayoutGrid, Settings, Megaphone, ArrowUp, ArrowDown } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link } from 'react-router-dom';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// import { Link } from 'react-router-dom'; // Link is not used in this component
 
 interface StatCardProps {
   title: string;
@@ -15,34 +15,6 @@ interface StatCardProps {
   bgColor?: string; // Make bgColor optional as it's not always a direct prop
 }
 
-interface SummaryChartData {
-  name: string;
-  order: number;
-  incomeGrowth: number;
-}
-
-interface MostSellingProduct {
-  image: string;
-  name: string;
-  id: string;
-  sales: string;
-}
-
-interface RecentOrder {
-  productImage: string;
-  productName: string;
-  customer: string;
-  orderId: string;
-  date: string;
-  status: string;
-  statusColor: string;
-}
-
-interface WeeklyTopCustomer {
-  avatar: string;
-  name: string;
-  orders: number;
-}
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, percentage, percentageColor, trendValue }) => (
   <Card className="p-4 flex flex-col justify-between h-32 rounded-lg shadow-sm border border-gray-200">

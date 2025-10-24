@@ -43,7 +43,7 @@ const sampleOrders: Order[] = [
 ];
 
 const MyOrders: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
+  const [orders] = useState<Order[]>(sampleOrders); // setOrders is not used
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 

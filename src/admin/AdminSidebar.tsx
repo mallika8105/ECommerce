@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, ShoppingBag, Users, Package, BarChart2, LogOut, LayoutGrid, CreditCard, Gamepad2, AlignRight, Bell, User, LogIn, UserPlus } from 'lucide-react';
+import { Home, ShoppingBag, Users, Package, BarChart2, LogOut, User, LogIn } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const AdminSidebar: React.FC = () => {

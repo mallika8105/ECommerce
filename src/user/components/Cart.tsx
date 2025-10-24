@@ -46,30 +46,3 @@ const Cart: React.FC<CartProps> = ({ cartItems, onRemoveFromCart, onUpdateQuanti
 };
 
 export default Cart;
->>>>
-<task_progress>
-- [x] Analyze Requirements
-- [x] Project Setup and Structure: Confirm the use of the existing `Ecommerce` project as the base.
-- [x] Project Setup and Structure: Create a dedicated directory structure for the admin dashboard (e.g., `src/admin`).
-- [x] User-Facing Website Implementation: Implement Homepage (Hero banner, featured products, categories, offers).
-- [x] User-Facing Website Implementation: Create HomePage.tsx and HomePage.css
-- [x] User-Facing Website Implementation: Implement Product Listing Page (Filters, sorting, pagination).
-- [x] User-Facing Website Implementation: Implement Product Detail Page (Photos, description, add-to-cart, reviews).
-- [x] User-Facing Website Implementation: Install `react-router-dom` for routing.
-- [x] User-Facing Website Implementation: Integrate routing and components into `App.tsx`.
-- [x] User-Facing Website Implementation: Update `ProductListPage.tsx` to accept props and handle product data correctly.
-- [x] User-Facing Website Implementation: Update `ProductDetailPage.tsx` to accept `onAddToCart` prop.
-- [x] User-Facing Website Implementation: Update `Cart.tsx` to accept `onCheckout` prop and implement checkout button functionality.
-- [ ] User-Facing Website Implementation: Implement User Account features (Order history, addresses, wishlist).
-- [ ] User-Facing Website Implementation: Implement Search Bar with suggestions.
-- [ ] User-Facing Website Implementation: Implement Reviews & Ratings functionality.
-- [ ] User-Facing Website Implementation: Implement Customer Support (Contact form/chatbot).
-- [ ] User-Facing Website Implementation: Ensure Responsive Design.
-- [ ] User-Facing Website Implementation: Implement Authentication (Sign up, login using Supabase/Firebase Auth).
-- [ ] Admin Dashboard Implementation
-- [ ] Styling
-- [ ] API Integration (Frontend)
-- [ ] Development Server Setup
-- [ ] Testing
-- [ ] Deployment Preparation
-</task_progress>

@@ -29,7 +29,7 @@ import OrdersManagement from './admin/OrdersManagement';
 import UserManagement from './admin/UserManagement';
 import ReportsPage from './admin/ReportsPage';
 import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
-import AdminSidebar from './admin/AdminSidebar'; // Import AdminSidebar
+// import AdminSidebar from './admin/AdminSidebar'; // AdminSidebar is not directly used in App.tsx's main render
 import { CartProvider, useCart } from './context/CartContext';
 import CartDrawer from './components/CartDrawer'; // Import CartDrawer
 import Layout from './components/Layout'; // Import Layout component

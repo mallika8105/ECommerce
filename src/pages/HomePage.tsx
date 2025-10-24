@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import Button from '../components/Button';
+import React from 'react'; // Removed useState as it's not used
 import Card from '../components/Card';
 import { useCart } from '../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FeaturedProductsSection } from '../components/FeaturedProductsSection'; // Import the new component
-import BestsellerCarousel from '../user/components/BestsellerCarousel'; // Import the carousel component
-import type { Product } from '../components/FeaturedProductsSection'; // Import Product interface
+import BestsellerCarousel from '../user/components/BestsellerCarousel'; // 
 import './HomePage.css'; // Import the custom CSS file
 import Hero from './Hero'; // Import the new Hero component
 

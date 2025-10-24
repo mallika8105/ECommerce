@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X } from 'lucide-react'; // Trash2 is not used in this component
 import Button from './Button';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';

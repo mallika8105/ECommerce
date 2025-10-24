@@ -45,7 +45,7 @@ const CategoryPage: React.FC = () => {
             throw new Error(categoryError.message);
           }
           if (categoryData) {
-            setCategoryName(categoryData.name);
+            setCategoryName((categoryData as Category).name); // Explicitly cast to Category interface
           }
         }
 

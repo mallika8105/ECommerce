@@ -16,7 +16,7 @@ interface ReviewsSectionProps {
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ productId, initialReviews, onNewReview }) => {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [newReview, setNewReview] = useState({ rating: 0, comment: '' });
-  const [userName, setUserName] = useState('Anonymous'); // Placeholder for user name
+  const [userName] = useState('Anonymous'); // Placeholder for user name, setUserName is not used
 
   const handleRatingChange = (rating: number) => {
     setNewReview(prev => ({ ...prev, rating }));
