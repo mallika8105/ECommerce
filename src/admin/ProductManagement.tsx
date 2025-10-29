@@ -154,10 +154,8 @@ const ProductManagement: React.FC = () => {
 
   // Function to format price in Indian Rupees
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(price);
+    const formattedPrice = new Intl.NumberFormat('en-IN').format(price);
+    return `₹ ${formattedPrice}`;
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {

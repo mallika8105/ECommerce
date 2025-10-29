@@ -119,22 +119,22 @@ const CheckoutPage: React.FC = () => {
                     <div key={item.id} className="order-item">
                       <img src={item.image_url} alt={item.name} className="w-12 h-12 object-contain rounded-md mr-2" /> {/* Changed to image_url */}
                       <span>{item.name} (x{item.quantity})</span>
-                      <span>${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                      <span>₹{(item.price * (item.quantity || 1)).toFixed(2)}</span>
                     </div>
                   ))
                 )}
                 <div className="order-summary-divider"></div>
                 <div className="order-summary-subtotal">
                   <span>Subtotal:</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="order-summary-shipping">
                   <span>Shipping:</span>
-                  <span className="font-semibold">${shipping.toFixed(2)}</span>
+                  <span className="font-semibold">₹{shipping.toFixed(2)}</span>
                 </div>
                 <div className="order-summary-total">
                   <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
               <Button variant="primary" className="place-order-button" onClick={handlePlaceOrder}>

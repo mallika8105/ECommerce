@@ -124,7 +124,7 @@ const OrdersManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">{order.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{order.customerName}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{order.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">${order.total.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">₹{order.total.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Dropdown
                         options={statusOptions}
@@ -154,12 +154,12 @@ const OrdersManagement: React.FC = () => {
             <p className="flex items-center">
               <strong>Status:</strong> <span className="ml-2 flex items-center">{getStatusIcon(selectedOrder.status)} {selectedOrder.status}</span>
             </p>
-            <p><strong>Total:</strong> ${selectedOrder.total.toFixed(2)}</p>
+            <p><strong>Total:</strong> ₹{selectedOrder.total.toFixed(2)}</p>
             <h3 className="text-lg font-bold mt-4">Items:</h3>
             <ul className="list-disc pl-5 space-y-1">
               {selectedOrder.items.map((item) => (
                 <li key={item.productId}>
-                  {item.productName} (x{item.quantity}) - ${item.price.toFixed(2)} each
+                  {item.productName} (x{item.quantity}) - ₹{item.price.toFixed(2)} each
                 </li>
               ))}
             </ul>

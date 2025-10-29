@@ -88,7 +88,7 @@ const MyOrders: React.FC = () => {
                     {getStatusIcon(order.status)}
                     <span className="ml-2 text-gray-700 font-semibold">{order.status}</span>
                   </div>
-                  <p className="text-lg font-bold text-gray-800 mt-2">Total: ${order.total.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-gray-800 mt-2">Total: ₹{order.total.toFixed(2)}</p>
                 </div>
                 <Button variant="secondary" className="mt-4 md:mt-0" onClick={() => handleViewDetails(order)}>
                   View Details
@@ -106,12 +106,12 @@ const MyOrders: React.FC = () => {
             <p className="flex items-center">
               <strong>Status:</strong> <span className="ml-2 flex items-center">{getStatusIcon(selectedOrder.status)} {selectedOrder.status}</span>
             </p>
-            <p><strong>Total:</strong> ${selectedOrder.total.toFixed(2)}</p>
+            <p><strong>Total:</strong> ₹{selectedOrder.total.toFixed(2)}</p>
             <h3 className="text-lg font-bold mt-4">Items:</h3>
             <ul className="list-disc pl-5 space-y-1">
               {selectedOrder.items.map((item) => (
                 <li key={item.productId}>
-                  {item.productName} (x{item.quantity}) - ${item.price.toFixed(2)} each
+                  {item.productName} (x{item.quantity}) - ₹{item.price.toFixed(2)} each
                 </li>
               ))}
             </ul>

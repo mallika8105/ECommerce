@@ -215,7 +215,7 @@ const AdminDashboardHome: React.FC = () => {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard
           title="Ecommerce Revenue"
-          value="$245,450" // This should also be dynamic
+          value="₹ 20,50,450" // This should also be dynamic
           percentage="14.9%"
           percentageColor="text-green-500"
           period=""
@@ -239,11 +239,11 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="Average Order Value"
-          value="$2,412.23" // This should also be dynamic
+          value="₹ 2,412" // This should also be dynamic
           percentage="35.2%"
           percentageColor="text-green-500"
           period=""
-          trendValue="+$754"
+          trendValue="+₹ 754"
         />
         <StatCard
           title="Conversion rate"

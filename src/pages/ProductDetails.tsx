@@ -190,7 +190,7 @@ const ProductDetails: React.FC = () => {
           {/* Product Info & Description - Right Side */}
           <div className="product-info-description">
             <h1 className="product-name">{product.name}</h1>
-            <p className="product-price">${product.price.toFixed(2)}</p>
+            <p className="product-price">₹{product.price.toFixed(2)}</p>
             <p className="product-description">{product.description}</p>
 
             {/* Product Description Details (Color, Size Chart, etc.) */}
@@ -295,7 +295,7 @@ const ProductDetails: React.FC = () => {
                 <Card className="text-center">
                   <img src={related.image_url} alt={related.name} className="mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">{related.name}</h3>
-                  <p className="text-gray-700 mb-4">${related.price.toFixed(2)}</p>
+                  <p className="text-gray-700 mb-4">₹{related.price.toFixed(2)}</p>
                   <Button variant="primary">View Details</Button>
                 </Card>
               </Link>

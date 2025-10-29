@@ -17,7 +17,7 @@ interface Product {
 }
 
 const ProductListing: React.FC = () => {
-  const { categoryId } = useParams<{ categoryId?: string }>(); // Get categoryId from URL
+  const { categoryId, subcategoryId } = useParams<{ categoryId?: string; subcategoryId?: string }>(); // Get categoryId or subcategoryId from URL
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,10 @@ const ProductListing: React.FC = () => {
           .from('products')
           .select('*');
 
-        if (categoryId) {
+        // If subcategoryId is provided, filter by subcategory_id (higher priority)
+        if (subcategoryId) {
+          query = query.eq('subcategory_id', subcategoryId);
+        } else if (categoryId) {
           query = query.eq('category_id', categoryId); // Filter by category_id if present
         }
 
@@ -90,7 +93,7 @@ const ProductListing: React.FC = () => {
   return (
     <div className="product-listing-container">
       <main className="product-listing-main">
-        <h1 className="product-listing-title">{categoryId ? `Products in Category: ${categoryId}` : 'Shop All Products'}</h1>
+  <h1 className="product-listing-title">{subcategoryId ? `Products in Subcategory: ${subcategoryId}` : categoryId ? `Products in Category: ${categoryId}` : 'Shop All Products'}</h1>
         {error && <p className="warning-message">Warning: {error}</p>}
         <div className="product-grid">
           {products.length > 0 ? (
@@ -99,7 +102,7 @@ const ProductListing: React.FC = () => {
                 <Link to={`/products/${product.id}`} onClick={() => console.log('ProductListing: Clicking product with ID:', product.id)}> {/* Debug log */}
                   <img src={product.image_url} alt={product.name} className="product-image" />
                   <h3 className="product-name">{product.name}</h3>
-                  <p className="product-price">${product.price.toFixed(2)}</p>
+                  <p className="product-price">₹{product.price.toFixed(2)}</p>
                 </Link>
                 <p className="product-description">{product.description}</p>
                 {product.color && <p className="product-color">Color: {product.color}</p>}

@@ -117,11 +117,11 @@ const ProductListPage: React.FC<ProductListProps> = ({ products, onAddToCart }) 
           <label htmlFor="price-filter">Price Range:</label>
           <select id="price-filter" name="priceRange" value={filters.priceRange} onChange={handleFilterChange}>
             <option value="">All Prices</option>
-            <option value="0-20"> $0 - $20</option>
-            <option value="20-50">$20 - $50</option>
-            <option value="50-100">$50 - $100</option>
-            <option value="100-200">$100 - $200</option>
-            <option value="200-1000">$200+</option>
+            <option value="0-1499">₹0 - ₹1,499</option>
+            <option value="1500-4999">₹1,500 - ₹4,999</option>
+            <option value="5000-9999">₹5,000 - ₹9,999</option>
+            <option value="10000-19999">₹10,000 - ₹19,999</option>
+            <option value="20000-100000">₹20,000+</option>
           </select>
         </div>
 
@@ -143,7 +143,7 @@ const ProductListPage: React.FC<ProductListProps> = ({ products, onAddToCart }) 
           <div key={product.id} className="product-card">
             <img src={product.imageUrl} alt={product.name} />
             <h3>{product.name}</h3>
-            <p>${product.price.toFixed(2)}</p>
+            <p>₹ {product.price.toLocaleString('en-IN')}</p>
             <p className="product-category">{product.category}</p>
             <button onClick={() => onAddToCart(product)}>Add to Cart</button>
           </div>

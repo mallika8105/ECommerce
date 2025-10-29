@@ -118,7 +118,7 @@ const CategoryPage: React.FC = () => {
                   <img src={product.image_url} alt={product.name} className="product-image" />
                   <h3 className="product-name">{product.name}</h3>
                 </Link>
-                <p className="product-price">${product.price.toFixed(2)}</p>
+                <p className="product-price">₹{product.price.toFixed(2)}</p>
                 <Button variant="primary" onClick={() => addToCart(product)}>Add to Cart</Button>
               </Card>
             ))}

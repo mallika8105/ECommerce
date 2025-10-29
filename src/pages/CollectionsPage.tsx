@@ -15,18 +15,40 @@ const CollectionsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Order of categories
+  const categoryOrder = [
+    "Men's Fashion",
+    "Women's Fashion",
+    "Kid's Fashion",
+    "Eyewear",
+    "Sports and Fitness",
+    "Electronics and Gadgets",
+    "Home and Living",
+    "Gifts and Occasions"
+  ];
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase
-          .from('categories') // Fetch from the new 'categories' table
+          .from('categories')
           .select('*');
 
         if (error) {
           throw new Error(error.message);
         }
 
-        setCategories(data || []);
+        // Sort the categories according to the specified order
+        const sortedCategories = [...(data || [])].sort((a, b) => {
+          const indexA = categoryOrder.indexOf(a.name);
+          const indexB = categoryOrder.indexOf(b.name);
+          // If category is not in the order list, put it at the end
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+
+        setCategories(sortedCategories);
         setError(null);
       } catch (err: any) {
         setError(`Failed to fetch categories: ${err.message}`);
@@ -67,7 +89,7 @@ const CollectionsPage: React.FC = () => {
           <div className="category-grid">
             {categories.map((category) => (
               <div key={category.id} className="category-card">
-                <Link to={`/products/category/${category.id}`}>
+                <Link to={`/categories/${category.id}/subcategories`}>
                   {category.image_url && (
                     <img src={category.image_url} alt={category.name} className="category-image" />
                   )}

@@ -17,6 +17,7 @@ import DashboardPage from './pages/DashboardPage'; // Import the new DashboardPa
 import CollectionsPage from './pages/CollectionsPage'; // Import CollectionsPage
 import CategoryPage from './pages/CategoryPage'; // Import CategoryPage
 import BestsellerPage from './pages/BestsellerPage'; // Import BestsellerPage
+import SubCategoriesPage from './pages/SubCategoriesPage'; // Sub-categories listing
 import AboutUsPage from './pages/AboutUsPage'; // Import AboutUsPage
 import ContactUsPage from './pages/ContactUsPage'; // Import ContactUsPage
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
@@ -77,6 +78,8 @@ const AppContent: React.FC = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ProductListing />} />
+          <Route path="/categories/:categoryId/subcategories" element={<SubCategoriesPage />} />
+          <Route path="/products/subcategory/:subcategoryId" element={<ProductListing />} />
           <Route path="/product/:productId" element={<ProductDetails />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/cart" element={<CartPage />} />
