@@ -26,18 +26,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
   };
 
   return (
-    <Card className="product-card" onClick={handleCardClick}>
+    <Card className="product-card" onClick={handleCardClick}> {/* Make the entire card clickable */}
       {rank && <div className="product-rank">#{rank}</div>}
-      <div className="product-card-image-container">
-        <img src={product.image} alt={product.name} className="product-card-image" />
-      </div>
+      <img src={product.image} alt={product.name} className="product-card-image" />
       <div className="product-card-details">
         <h3 className="product-card-name">
           <a href={`/products/${product.id}`} onClick={handleCardClick} className="product-name-link">
             {product.name}
           </a>
         </h3>
-        <p className="product-card-price">₹ {product.price.toLocaleString('en-IN')}</p>
+        <p className="product-card-price">${product.price.toFixed(2)}</p>
         <div className="product-card-rating">
           {'⭐'.repeat(Math.floor(product.rating))} ({product.reviews} reviews)
         </div>

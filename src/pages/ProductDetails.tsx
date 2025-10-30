@@ -55,8 +55,7 @@ const ProductDetails: React.FC = () => {
         const { data, error: productError } = await supabase
           .from('products')
           .select('*') // Removed non-existent columns
-          .eq('id', productId) // Reverted to original, assuming productId is a UUID
-          .single();
+          .eq('id', productId); // Removed .single()
 
         console.log('Supabase fetch result - data:', data, 'error:', productError); // Log fetch result
 
@@ -64,14 +63,14 @@ const ProductDetails: React.FC = () => {
           throw new Error(productError.message);
         }
 
-        if (data) {
+        if (data && data.length > 0) { // Check if data exists and is not empty
           const fetchedProduct: Product = {
-            ...data,
-            image_url: data.image_url || 'https://via.placeholder.com/300?text=No+Image',
-            additional_images: data.additional_images || [],
-            colors: data.colors || [], // Initialize colors
-            size_chart_url: data.size_chart_url || '', // Initialize size_chart_url
-            available_sizes: data.available_sizes || [], // Initialize available_sizes
+            ...data[0], // Use the first result
+            image_url: data[0].image_url || 'https://via.placeholder.com/300?text=No+Image',
+            additional_images: data[0].additional_images || [],
+            colors: data[0].colors || [], // Initialize colors
+            size_chart_url: data[0].size_chart_url || '', // Initialize size_chart_url
+            available_sizes: data[0].available_sizes || [], // Initialize available_sizes
           };
           setProduct(fetchedProduct);
           setMainImage(fetchedProduct.image_url);

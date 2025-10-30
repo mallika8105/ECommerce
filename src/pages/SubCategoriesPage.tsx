@@ -27,11 +27,42 @@ const SubCategoriesPage: React.FC = () => {
         const { data, error } = await supabase
           .from('subcategories')
           .select('*')
-          .eq('category_id', categoryId)
-          .order('name', { ascending: true });
+          .eq('category_id', categoryId);
 
         if (error) throw error;
-        setSubcategories(data || []);
+
+        console.log('Fetched subcategories:', data); // Debugging line
+
+        const desiredOrder = [
+          "Shirts",
+          "T-Shirts and Polos",
+          "Jeans and Trousers",
+          "Suits & Blazers",
+          "SportsWear",
+          "Accessories",
+          "Footwear"
+        ];
+
+        const sortedSubcategories = (data || []).sort((a, b) => {
+          const nameA = a.name.trim().toLowerCase();
+          const nameB = b.name.trim().toLowerCase();
+
+          const lowerCaseDesiredOrder = desiredOrder.map(name => name.toLowerCase());
+
+          const indexA = lowerCaseDesiredOrder.indexOf(nameA);
+          const indexB = lowerCaseDesiredOrder.indexOf(nameB);
+
+          // Handle cases where a subcategory might not be in the desiredOrder list
+          if (indexA === -1 && indexB === -1) return 0; // Both not in list, maintain original relative order
+          if (indexA === -1) return 1; // a not in list, b comes first
+          if (indexB === -1) return -1; // b not in list, a comes first
+
+          return indexA - indexB;
+        });
+
+        console.log('Sorted subcategories:', sortedSubcategories); // Debugging line
+
+        setSubcategories(sortedSubcategories);
         setError(null);
       } catch (err: any) {
         console.error('Failed to fetch subcategories', err);

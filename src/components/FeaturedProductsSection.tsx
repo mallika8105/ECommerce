@@ -78,7 +78,7 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
                     </h3>
                     <div className="featured-product-price-wrapper">
                       <p className="featured-product-price">
-                        ₹ {product.price.toLocaleString('en-IN')}
+                        ${product.price.toFixed(2)}
                       </p>
                     </div>
                     <button

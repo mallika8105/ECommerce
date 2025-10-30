@@ -38,8 +38,11 @@ const CollectionsPage: React.FC = () => {
           throw new Error(error.message);
         }
 
+        // Filter out "Casual Wear" from the main collections page
+        const filteredData = (data || []).filter(category => category.name !== 'Casual Wear');
+
         // Sort the categories according to the specified order
-        const sortedCategories = [...(data || [])].sort((a, b) => {
+        const sortedCategories = [...filteredData].sort((a, b) => {
           const indexA = categoryOrder.indexOf(a.name);
           const indexB = categoryOrder.indexOf(b.name);
           // If category is not in the order list, put it at the end
@@ -89,15 +92,27 @@ const CollectionsPage: React.FC = () => {
           <div className="category-grid">
             {categories.map((category) => (
               <div key={category.id} className="category-card">
-                <Link to={`/categories/${category.id}/subcategories`}>
-                  {category.image_url && (
-                    <img src={category.image_url} alt={category.name} className="category-image" />
-                  )}
-                  <h3 className="category-name">{category.name}</h3>
-                  {category.description && (
-                    <p className="category-description">{category.description}</p>
-                  )}
-                </Link>
+                {category.name === "Men's Fashion" || category.name === "Kid's Fashion" ? (
+                  <Link to={`/categories/${category.id}/subcategories`}>
+                    {category.image_url && (
+                      <img src={category.image_url} alt={category.name} className="category-image" />
+                    )}
+                    <h3 className="category-name">{category.name}</h3>
+                    {category.description && (
+                      <p className="category-description">{category.description}</p>
+                    )}
+                  </Link>
+                ) : (
+                  <Link to={`/products/category/${category.id}`}>
+                    {category.image_url && (
+                      <img src={category.image_url} alt={category.name} className="category-image" />
+                    )}
+                    <h3 className="category-name">{category.name}</h3>
+                    {category.description && (
+                      <p className="category-description">{category.description}</p>
+                    )}
+                  </Link>
+                )}
               </div>
             ))}
           </div>

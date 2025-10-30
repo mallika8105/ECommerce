@@ -9,8 +9,8 @@ const products = [
   {
     id: 1,
     name: "Premium Wireless Headphones",
-    price: 10999,
-    originalPrice: 16999,
+    price: 129.99,
+    originalPrice: 199.99,
     rating: 4.8,
     reviews: 2847,
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
@@ -19,8 +19,8 @@ const products = [
   {
     id: 2,
     name: "Smart Fitness Watch",
-    price: 20999,
-    originalPrice: 29999,
+    price: 249.99,
+    originalPrice: 349.99,
     rating: 4.9,
     reviews: 1923,
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
@@ -29,8 +29,8 @@ const products = [
   {
     id: 3,
     name: "Leather Crossbody Bag",
-    price: 7499,
-    originalPrice: 12999,
+    price: 89.99,
+    originalPrice: 149.99,
     rating: 4.7,
     reviews: 3421,
     image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80",
@@ -39,8 +39,8 @@ const products = [
   {
     id: 4,
     name: "Minimalist Desk Lamp",
-    price: 4999,
-    originalPrice: 8999,
+    price: 59.99,
+    originalPrice: 99.99,
     rating: 4.6,
     reviews: 1542,
     image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
@@ -49,8 +49,8 @@ const products = [
   {
     id: 5,
     name: "Ceramic Coffee Mug Set",
-    price: 2999,
-    originalPrice: 4999,
+    price: 34.99,
+    originalPrice: 54.99,
     rating: 4.9,
     reviews: 4231,
     image: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=500&q=80",
@@ -185,10 +185,10 @@ export default function BestsellerCarousel() {
                   {/* Price */}
                   <div className="product-price">
                     <span className="current-price">
-                      ₹ {product.price.toLocaleString('en-IN')}
+                      ${product.price}
                     </span>
                     <span className="original-price">
-                      ₹ {product.originalPrice.toLocaleString('en-IN')}
+                      ${product.originalPrice}
                     </span>
                   </div>
 

@@ -16,8 +16,18 @@ interface Product {
   color?: string; // Add color
 }
 
-const ProductListing: React.FC = () => {
-  const { categoryId, subcategoryId } = useParams<{ categoryId?: string; subcategoryId?: string }>(); // Get categoryId or subcategoryId from URL
+interface ProductListingProps {
+  categoryId?: string;
+  subcategoryId?: string;
+}
+
+const ProductListing: React.FC<ProductListingProps> = ({ categoryId: propCategoryId, subcategoryId: propSubcategoryId }) => {
+  const { categoryId: paramCategoryId, subcategoryId: paramSubcategoryId } = useParams<{ categoryId?: string; subcategoryId?: string }>(); // Get categoryId or subcategoryId from URL
+  
+  // Use prop values if available, otherwise fall back to URL parameters
+  const currentCategoryId = propCategoryId || paramCategoryId;
+  const currentSubcategoryId = propSubcategoryId || paramSubcategoryId;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +43,10 @@ const ProductListing: React.FC = () => {
           .select('*');
 
         // If subcategoryId is provided, filter by subcategory_id (higher priority)
-        if (subcategoryId) {
-          query = query.eq('subcategory_id', subcategoryId);
-        } else if (categoryId) {
-          query = query.eq('category_id', categoryId); // Filter by category_id if present
+        if (currentSubcategoryId) {
+          query = query.eq('subcategory_id', currentSubcategoryId);
+        } else if (currentCategoryId) {
+          query = query.eq('category_id', currentCategoryId); // Filter by category_id if present
         }
 
         const { data, error } = await query;
@@ -65,7 +75,7 @@ const ProductListing: React.FC = () => {
     };
 
     fetchProducts();
-  }, [categoryId]); // Re-run effect when categoryId changes
+  }, [currentCategoryId, currentSubcategoryId]); // Re-run effect when categoryId or subcategoryId changes
 
   // Log the products array to debug
   products.forEach(p => console.log("Product ID:", p.id, "Name:", p.name));
@@ -93,7 +103,7 @@ const ProductListing: React.FC = () => {
   return (
     <div className="product-listing-container">
       <main className="product-listing-main">
-  <h1 className="product-listing-title">{subcategoryId ? `Products in Subcategory: ${subcategoryId}` : categoryId ? `Products in Category: ${categoryId}` : 'Shop All Products'}</h1>
+  <h1 className="product-listing-title">{currentSubcategoryId ? `Products in Subcategory: ${currentSubcategoryId}` : currentCategoryId ? `Products in Category: ${currentCategoryId}` : 'Shop All Products'}</h1>
         {error && <p className="warning-message">Warning: {error}</p>}
         <div className="product-grid">
           {products.length > 0 ? (
