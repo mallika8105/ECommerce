@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import Modal from '../components/Modal';
+import Modal from '../components/Modal'; // Import Modal
 import EmptyState from '../components/EmptyState';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 interface SubCategory {
@@ -14,76 +14,52 @@ interface SubCategory {
   category_id: string;
   image_url: string;
   description: string;
-  category_name?: string; // For display purposes
+  order_index: number;
 }
 
-interface Category {
-  id: string;
-  name: string;
+interface SubCategoryListForCategoryProps {
+  categoryId: string;
+  categoryName: string;
 }
 
-const SubCategoryManagement: React.FC = () => {
+const SubCategoryListForCategory: React.FC<SubCategoryListForCategoryProps> = ({ categoryId, categoryName }) => {
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]); // To select parent category
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentSubCategory, setCurrentSubCategory] = useState<SubCategory | null>(null);
-  const [formData, setFormData] = useState<Omit<SubCategory, 'id' | 'category_name'>>({
+  const [formData, setFormData] = useState<Omit<SubCategory, 'id'>>({
     name: '',
-    category_id: '',
+    category_id: categoryId,
     image_url: '',
-    description: ''
+    description: '',
+    order_index: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCategories();
-    fetchSubCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('id, name');
-    
-    if (error) {
-      console.error('Error fetching categories:', error);
-    } else if (data) {
-      setCategories(data);
+    if (categoryId) {
+      fetchSubCategories();
     }
-  };
+  }, [categoryId]);
 
   const fetchSubCategories = async () => {
     setLoading(true);
     try {
-      console.log('Fetching subcategories...');
       const { data, error } = await supabase
         .from('subcategories')
-        .select(`
-          *,
-          categories(name)
-        `)
-        .order('name', { ascending: true });
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('order_index', { ascending: true });
 
       if (error) {
         console.error('Error fetching subcategories:', error);
         setError('Failed to fetch subcategories.');
         setSubcategories([]);
       } else {
-        console.log('Subcategories fetched:', data);
-        if (Array.isArray(data)) {
-          const subcategoriesWithCategoryNames = data.map(subcat => ({
-            ...subcat,
-            category_name: subcat.categories?.name
-          }));
-          setSubcategories(subcategoriesWithCategoryNames);
-          setError(null);
-        } else {
-          console.error('Unexpected data format:', data);
-          setError('Invalid data format received.');
-          setSubcategories([]);
-        }
+        console.log('Fetched subcategories:', data); // Log fetched data
+        setSubcategories(data as SubCategory[]);
+        setError(null);
       }
     } catch (err) {
       console.error('Exception while fetching subcategories:', err);
@@ -97,7 +73,7 @@ const SubCategoryManagement: React.FC = () => {
   const handleAddSubCategory = () => {
     setIsEditMode(false);
     setCurrentSubCategory(null);
-    setFormData({ name: '', category_id: '', image_url: '', description: '' });
+    setFormData({ name: '', category_id: categoryId, image_url: '', description: '', order_index: subcategories.length });
     setIsModalOpen(true);
   };
 
@@ -108,7 +84,8 @@ const SubCategoryManagement: React.FC = () => {
       name: subCategory.name,
       category_id: subCategory.category_id,
       image_url: subCategory.image_url,
-      description: subCategory.description
+      description: subCategory.description,
+      order_index: subCategory.order_index
     });
     setIsModalOpen(true);
   };
@@ -124,7 +101,7 @@ const SubCategoryManagement: React.FC = () => {
         console.error('Error deleting sub-category:', error);
         setError('Failed to delete sub-category.');
       } else {
-        setSubcategories((prev) => prev.filter((s) => s.id !== subCategoryId));
+        fetchSubCategories(); // Re-fetch to update order_index if needed
         setError(null);
       }
     }
@@ -134,11 +111,11 @@ const SubCategoryManagement: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: name === 'order_index' ? parseInt(value, 10) : value
     }));
   };
 
@@ -160,7 +137,7 @@ const SubCategoryManagement: React.FC = () => {
     } else {
       const { error } = await supabase
         .from('subcategories')
-        .insert([formData]);
+        .insert([{ ...formData, category_id: categoryId }]);
       
       if (error) {
         console.error('Error adding sub-category:', error);
@@ -173,12 +150,55 @@ const SubCategoryManagement: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const handleMoveSubCategory = async (subCategory: SubCategory, direction: 'up' | 'down') => {
+    const currentIndex = subcategories.findIndex(s => s.id === subCategory.id);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+    if (newIndex >= 0 && newIndex < subcategories.length) {
+      const updatedSubcategories = [...subcategories];
+      const [movedSubCategory] = updatedSubcategories.splice(currentIndex, 1);
+      updatedSubcategories.splice(newIndex, 0, movedSubCategory);
+
+      // Update order_index for all affected subcategories in the local state first
+      const reorderedSubcategories = updatedSubcategories.map((subcat, index) => ({
+        ...subcat,
+        order_index: index
+      }));
+      setSubcategories(reorderedSubcategories); // Optimistic UI update
+
+      // Prepare updates for the database, including all required fields
+      const updates = reorderedSubcategories.map(subcat => ({
+        id: subcat.id,
+        name: subcat.name,
+        category_id: subcat.category_id,
+        image_url: subcat.image_url,
+        description: subcat.description,
+        order_index: subcat.order_index
+      }));
+
+      console.log('Sending updates to Supabase:', updates); // Log updates being sent
+
+      const { error } = await supabase
+        .from('subcategories')
+        .upsert(updates, { onConflict: 'id', ignoreDuplicates: false }); // Ensure all fields are updated
+
+      if (error) {
+        console.error('Error updating subcategory order:', error);
+        setError('Failed to update subcategory order.');
+      } else {
+        console.log('Subcategory order updated successfully.'); // Log success
+        fetchSubCategories(); // Re-fetch to ensure UI is consistent with DB
+        setError(null);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <main className="flex-grow container mx-auto p-4">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Sub-Category Management</h1>
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Subcategories for "{categoryName}"</h2>
 
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-6 space-x-4">
           <Button variant="primary" onClick={handleAddSubCategory}>
             <PlusCircle size={20} className="mr-2" /> Add New Sub-Category
           </Button>
@@ -202,22 +222,47 @@ const SubCategoryManagement: React.FC = () => {
             </div>
           </Card>
         ) : subcategories.length === 0 ? (
-          <EmptyState message="No sub-categories found. Add a new sub-category to get started!" />
+          <EmptyState message={`No sub-categories found for "${categoryName}". Add a new sub-category to get started!`} />
         ) : (
           <Card className="p-6 overflow-x-auto bg-white shadow-md">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Image</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {subcategories.map((subcat) => (
+                {subcategories.map((subcat, index) => (
                   <tr key={subcat.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                      <div className="flex items-center space-x-2">
+                        <span>{subcat.order_index + 1}</span>
+                        <div className="flex flex-col">
+                          <Button 
+                            variant="secondary" // Changed to secondary
+                            size="small" 
+                            onClick={() => handleMoveSubCategory(subcat, 'up')} 
+                            disabled={index === 0}
+                            className="p-1"
+                          >
+                            <ArrowUp size={16} />
+                          </Button>
+                          <Button 
+                            variant="secondary" // Changed to secondary
+                            size="small" 
+                            onClick={() => handleMoveSubCategory(subcat, 'down')} 
+                            disabled={index === subcategories.length - 1}
+                            className="p-1"
+                          >
+                            <ArrowDown size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {subcat.image_url ? (
                         <img 
@@ -232,7 +277,6 @@ const SubCategoryManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{subcat.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">{subcat.category_name}</td>
                     <td className="px-6 py-4 text-gray-900">{subcat.description}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button variant="secondary" size="small" className="mr-2" onClick={() => handleEditSubCategory(subcat)}>
@@ -250,6 +294,7 @@ const SubCategoryManagement: React.FC = () => {
         )}
       </main>
 
+      {/* Modal for Add/Edit Subcategory */}
       <Modal isOpen={isModalOpen} onClose={handleModalClose} title={isEditMode ? 'Edit Sub-Category' : 'Add New Sub-Category'}>
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <Input
@@ -259,32 +304,6 @@ const SubCategoryManagement: React.FC = () => {
             onChange={handleFormChange}
             required
           />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Parent Category</label>
-            <div className="relative">
-              <select
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleFormChange}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                  bg-white text-gray-900"
-                required
-              >
-                <option value="">Select a parent category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
           <div className="flex flex-col space-y-2">
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
@@ -304,6 +323,14 @@ const SubCategoryManagement: React.FC = () => {
               placeholder="https://example.com/image.jpg"
             />
           </div>
+          <Input
+            label="Order Index"
+            name="order_index"
+            type="number"
+            value={formData.order_index}
+            onChange={handleFormChange}
+            required
+          />
           <div className="flex justify-end space-x-2 mt-6">
             <Button type="button" variant="secondary" onClick={handleModalClose}>
               Cancel
@@ -318,4 +345,4 @@ const SubCategoryManagement: React.FC = () => {
   );
 };
 
-export default SubCategoryManagement;
+export default SubCategoryListForCategory;

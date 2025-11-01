@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
             />
             <Search className="search-icon" size={20} />
           </div>
-          <Link to="/profile" className="account-link">
+          <Link to="/auth" className="account-link">
             <User className="account-icon" size={24} />
             <span className="account-text">Account</span>
           </Link>
@@ -112,7 +112,7 @@ const Navbar: React.FC = () => {
           <Link to="/collections" className="mobile-nav-link">Collections</Link>
           <Link to="/bestsellers" className="mobile-nav-link">Bestsellers</Link>
           <Link to="/about-us" className="mobile-nav-link">About us</Link>
-          <Link to="/profile" className="mobile-account-link">
+          <Link to="/auth" className="mobile-account-link">
             <User className="mobile-account-icon" size={24} />
             <span className="mobile-account-text">Account</span>
           </Link>

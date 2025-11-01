@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import { useCart } from '../context/CartContext'; // Import useCart
-import './CheckoutPage.css'; // Import the custom CSS file
-
-// The Product interface from CartContext is sufficient, no need for a separate CartItem here.
+import { useCart } from '../context/CartContext';
+import { supabase } from '../supabaseClient'; // Import supabase
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import './CheckoutPage.css';
 
 const CheckoutPage: React.FC = () => {
-  const { cartItems } = useCart(); // Use cartItems from CartContext
+  const { cartItems, clearCart } = useCart(); // Use cartItems and clearCart from CartContext
+  const { user, isAdmin } = useAuth(); // Get user and isAdmin from AuthContext
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
     addressLine1: '',
@@ -19,6 +23,8 @@ const CheckoutPage: React.FC = () => {
     country: '',
   });
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const shipping = 10.00; // Placeholder
@@ -33,15 +39,81 @@ const CheckoutPage: React.FC = () => {
     setPaymentMethod(e.target.value);
   };
 
-  const handlePlaceOrder = () => {
-    console.log('Placing order with:', { shippingAddress, paymentMethod, cartItems, total });
-    // Implement order placement logic
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      setError('You must be logged in to place an order.');
+      return;
+    }
+    // Prevent mock admin from placing orders
+    if (isAdmin) {
+      setError('Orders cannot be placed with a mock admin account. Please log in as a regular user.');
+      return;
+    }
+    if (cartItems.length === 0) {
+      setError('Your cart is empty. Please add items before placing an order.');
+      return;
+    }
+    if (!shippingAddress.fullName || !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.zipCode || !shippingAddress.country) {
+      setError('Please fill in all required shipping address fields.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Create the order record
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: total,
+          shipping_address: shippingAddress, // Store address as JSONB
+          payment_method: paymentMethod,
+          status: 'pending', // Initial status
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      const orderId = orderData.id;
+
+      // 2. Create order item records
+      const orderItemsToInsert = cartItems.map(item => ({
+        order_id: orderId,
+        product_id: item.id,
+        quantity: item.quantity || 1,
+        price_at_purchase: item.price,
+      }));
+
+      const { error: orderItemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsToInsert);
+
+      if (orderItemsError) throw orderItemsError;
+
+      // 3. Clear the cart
+      clearCart();
+
+      // 4. Redirect to order confirmation page
+      navigate(`/order-confirmation/${orderId}`);
+
+    } catch (err: any) {
+      console.error('Error placing order:', err);
+      setError(`Failed to place order: ${err.message || 'An unexpected error occurred.'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="checkout-container">
       <main className="checkout-main">
         <h1 className="checkout-title">Checkout</h1>
+
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {loading && <p className="text-blue-500 text-center mb-4">Placing order...</p>}
 
         <div className="checkout-grid">
           {/* Shipping Address & Payment */}
@@ -137,8 +209,8 @@ const CheckoutPage: React.FC = () => {
                   <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
-              <Button variant="primary" className="place-order-button" onClick={handlePlaceOrder}>
-                Place Order
+              <Button variant="primary" className="place-order-button" onClick={handlePlaceOrder} disabled={loading}>
+                {loading ? 'Placing Order...' : 'Place Order'}
               </Button>
             </Card>
           </div>

@@ -22,21 +22,21 @@ import AboutUsPage from './pages/AboutUsPage'; // Import AboutUsPage
 import ContactUsPage from './pages/ContactUsPage'; // Import ContactUsPage
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
 import TermsOfServicePage from './pages/TermsOfServicePage'; // Import TermsOfServicePage
+import AccountPage from './pages/AccountPage'; // Import AccountPage
 
 // Admin Pages
 import AdminDashboardHome from './admin/AdminDashboardHome';
 import ProductManagement from './admin/ProductManagement';
 import CategoryManagement from './admin/CategoryManagement';
-import SubCategoryManagement from './admin/SubCategoryManagement'; // Import SubCategoryManagement
 import OrdersManagement from './admin/OrdersManagement';
 import UserManagement from './admin/UserManagement';
 import ReportsPage from './admin/ReportsPage';
 import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
 import ProtectedRoute from './admin/ProtectedRoute'; // Import ProtectedRoute
 import AdminLoginPage from './admin/AdminLoginPage';
+import SubCategoryPage from './admin/SubCategoryPage'; // Import the new SubCategoryPage
 // import AdminSidebar from './admin/AdminSidebar'; // AdminSidebar is not directly used in App.tsx's main render
 import { CartProvider, useCart } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 import CartDrawer from './components/CartDrawer'; // Import CartDrawer
 import Layout from './components/Layout'; // Import Layout component
 import { supabase } from './supabaseClient'; // Import supabase client
@@ -67,11 +67,9 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <AuthProvider> {/* Wrap with AuthProvider */}
-          <CartProvider>
-            <AppContent casualWearCategoryId={casualWearCategoryId} />
-          </CartProvider>
-        </AuthProvider>
+        <CartProvider>
+          <AppContent casualWearCategoryId={casualWearCategoryId} />
+        </CartProvider>
       </Router>
     </ErrorBoundary>
   );
@@ -96,7 +94,7 @@ const AppContent: React.FC<AppContentProps> = ({ casualWearCategoryId }) => {
                 <Route path="dashboard" element={<AdminDashboardHome />} />
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="categories" element={<CategoryManagement />} />
-                <Route path="subcategories" element={<SubCategoryManagement />} />
+                <Route path="categories/:categoryId/subcategories" element={<SubCategoryPage />} /> {/* New route for subcategories */}
                 <Route path="orders" element={<OrdersManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="reports" element={<ReportsPage />} />
@@ -115,6 +113,7 @@ const AppContent: React.FC<AppContentProps> = ({ casualWearCategoryId }) => {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/account" element={<AccountPage />} /> {/* New route for AccountPage */}
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />

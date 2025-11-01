@@ -5,14 +5,16 @@ import Input from '../components/Input';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, List } from 'lucide-react'; // Added List icon
 import { supabase } from '../supabaseClient';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 
 interface Category {
   id: string;
   name: string;
   description: string;
   image_url: string;
+  order_index: number;
 }
 
 const CategoryManagement: React.FC = () => {
@@ -23,8 +25,10 @@ const CategoryManagement: React.FC = () => {
   const [formData, setFormData] = useState<Omit<Category, 'id'>>({
     name: '',
     description: '',
-    image_url: ''
+    image_url: '',
+    order_index: 0
   });
+  // Removed selectedCategory state as we are navigating to a new page
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,13 +36,50 @@ const CategoryManagement: React.FC = () => {
     fetchCategories();
   }, []);
 
+  const seedCategories = async () => {
+    setLoading(true);
+    try {
+      const categoriesToInsert = [
+        { name: "Women's fashion", description: "Fashion items specifically for women.", image_url: "" },
+        { name: "Men's fashion", description: "Fashion items specifically for men.", image_url: "" },
+        { name: "Kid's fashion", description: "Fashion items specifically for kids.", image_url: "" },
+        { name: "Mobiles", description: "Mobile phones and accessories.", image_url: "" },
+        { name: "Laptops", description: "Laptops and computer accessories.", image_url: "" },
+        { name: "Electronics", description: "Electronic gadgets and devices.", image_url: "" },
+        { name: "Home & Kitchen", description: "Home appliances and kitchenware.", image_url: "" },
+        { name: "Beauty & Personal Care", description: "Skincare, makeup, and personal hygiene products.", image_url: "" },
+        { name: "Sports & Fitness", description: "Sports equipment and fitness gear.", image_url: "" },
+        { name: "Books", description: "Books from various genres.", image_url: "" },
+      ];
+
+      const { error } = await supabase
+        .from('categories')
+        .insert(categoriesToInsert);
+
+      if (error) {
+        console.error('Error inserting categories:', error);
+        setError('Failed to add categories.');
+      } else {
+        console.log('Categories seeded successfully!');
+        fetchCategories(); // Refresh the list
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Exception while seeding categories:', err);
+      setError('An unexpected error occurred during seeding.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
       console.log('Fetching categories...');
       const { data, error } = await supabase
         .from('categories')
-        .select('*');
+        .select('*')
+        .order('order_index', { ascending: true }); // Order by the new column
 
       if (error) {
         console.error('Error fetching categories:', error);
@@ -67,7 +108,7 @@ const CategoryManagement: React.FC = () => {
   const handleAddCategory = () => {
     setIsEditMode(false);
     setCurrentCategory(null);
-    setFormData({ name: '', description: '', image_url: '' });
+    setFormData({ name: '', description: '', image_url: '', order_index: 0 });
     setIsModalOpen(true);
   };
 
@@ -77,7 +118,8 @@ const CategoryManagement: React.FC = () => {
     setFormData({
       name: category.name,
       description: category.description,
-      image_url: category.image_url
+      image_url: category.image_url,
+      order_index: category.order_index
     });
     setIsModalOpen(true);
   };
@@ -147,7 +189,10 @@ const CategoryManagement: React.FC = () => {
       <main className="flex-grow container mx-auto p-4">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Category Management</h1>
 
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-6 space-x-4">
+          <Button variant="secondary" onClick={seedCategories}>
+            Seed Categories
+          </Button>
           <Button variant="primary" onClick={handleAddCategory}>
             <PlusCircle size={20} className="mr-2" /> Add New Category
           </Button>
@@ -201,6 +246,9 @@ const CategoryManagement: React.FC = () => {
                       <Button variant="secondary" size="small" className="mr-2" onClick={() => handleEditCategory(category)}>
                         <Edit size={16} className="mr-1" /> Edit
                       </Button>
+                      <Link to={`/admin/categories/${category.id}/subcategories`} className="inline-flex items-center space-x-1 p-2 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 mr-2">
+                        <List size={16} className="mr-1" /> Subcategories
+                      </Link>
                       <Button variant="danger" size="small" onClick={() => handleDeleteCategory(category.id)}>
                         <Trash2 size={16} className="mr-1" /> Delete
                       </Button>
@@ -212,6 +260,7 @@ const CategoryManagement: React.FC = () => {
           </Card>
         )}
       </main>
+      {/* Removed Subcategory Management Modal */}
 
       <Modal isOpen={isModalOpen} onClose={handleModalClose} title={isEditMode ? 'Edit Category' : 'Add New Category'}>
         <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -241,6 +290,14 @@ const CategoryManagement: React.FC = () => {
               placeholder="https://example.com/image.jpg"
             />
           </div>
+          <Input
+            label="Order Index"
+            name="order_index"
+            type="number"
+            value={formData.order_index}
+            onChange={handleFormChange}
+            required
+          />
           <div className="flex justify-end space-x-2 mt-6">
             <Button type="button" variant="secondary" onClick={handleModalClose}>
               Cancel

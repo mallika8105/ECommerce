@@ -42,10 +42,20 @@ const CategoryPage: React.FC = () => {
             .single();
 
           if (categoryError) {
-            throw new Error(categoryError.message);
+            // It's better to check for a specific error code if Supabase provides one for "not found"
+            // For now, we'll assume any error here could mean the category is not found.
+            setCategoryName('Category Not Found');
+            setProducts([]);
+            setLoading(false);
+            return;
           }
           if (categoryData) {
             setCategoryName((categoryData as Category).name); // Explicitly cast to Category interface
+          } else {
+            setCategoryName('Category Not Found');
+            setProducts([]);
+            setLoading(false);
+            return;
           }
         }
 

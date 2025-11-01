@@ -1,78 +1,45 @@
-/* src/pages/CollectionsPage.css */
-
 .collections-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f0f2f5; /* Light gray background */
+  background-color: #f8f9fa;
 }
 
 .collections-main {
   flex-grow: 1;
-  max-width: 1480px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 1rem;
-}
-
-.category-navbar {
-  display: flex;
-  justify-content: space-around;
-  background-color: #ffffff; /* White background for category bar */
-  padding: 0.75rem 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap; /* Allow categories to wrap on smaller screens */
-}
-
-.category-link {
-  text-decoration: none;
-  color: #333;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  transition: color 0.2s ease-in-out;
-}
-
-.category-link:hover {
-  color: #007bff; /* Blue on hover */
+  padding: 2rem 4rem; /* comfortable side padding for large screens */
 }
 
 .collections-title {
-  font-size: 2.25rem; /* text-4xl */
-  font-weight: 700; /* font-bold */
-  color: #333;
+  font-size: 2.5rem;
+  font-weight: 700;
   text-align: center;
-  margin-bottom: 1rem;
-}
-
-.collections-intro {
-  text-align: center;
-  color: #666;
-  font-size: 1.125rem;
+  color: #222;
   margin-bottom: 2rem;
 }
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Four categories per row */
-  gap: 1.5rem; /* Space between cards */
-  padding: 1rem;
+  grid-template-columns: repeat(4, 1fr); /* ✅ Four cards per row on desktop */
+  gap: 1.5rem;
 }
 
 .category-card {
-  background-color: #ffffff;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   text-align: center;
-  transition: transform 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%; /* Ensure cards take full height in their grid cell */
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
 }
 
 .category-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .category-card a {
@@ -85,87 +52,50 @@
 
 .category-image {
   width: 100%;
-  height: 150px; /* Fixed height for images */
-  object-fit: cover; /* Cover the area without distortion */
-  border-bottom: 1px solid #eee;
+  height: 340px;
+  object-fit: cover;
 }
 
 .category-name {
-  font-size: 1.25rem; /* text-xl */
+  font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
-  margin: 1rem 0.5rem 0.5rem;
+  color: #222;
+  margin: 1rem 0 0.5rem;
 }
 
 .category-description {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #666;
-  padding: 0 0.5rem;
-  flex-grow: 1; /* Allow description to take available space */
+  padding: 0 1rem 1rem;
 }
 
-.explore-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 1rem;
-  margin: 1rem;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.explore-button:hover {
-  background-color: #0056b3;
-}
-
-.no-categories-found {
-  text-align: center;
-  color: #666;
-  font-size: 1.2rem;
-  margin-top: 2rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .category-navbar {
-    justify-content: flex-start;
-    padding: 0.5rem;
-  }
-
-  .category-link {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .collections-title {
-    font-size: 1.75rem;
-  }
-
-  .collections-intro {
-    font-size: 1rem;
-  }
-
+/* ✅ Responsive layouts */
+@media (max-width: 1200px) {
   .category-grid {
-    grid-template-columns: repeat(2, 1fr); /* Two categories per row on smaller screens */
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr); /* 3 per row on medium desktop */
+  }
+}
+
+@media (max-width: 900px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 per row on tablet */
   }
 
   .category-image {
-    height: 120px;
+    height: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .category-grid {
+    grid-template-columns: 1fr; /* 1 per row on mobile */
   }
 
-  .category-name {
-    font-size: 1rem;
+  .category-image {
+    height: 160px;
   }
 
-  .category-description {
-    font-size: 0.8rem;
-  }
-
-  .explore-button {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
+  .collections-main {
+    padding: 1rem;
   }
 }

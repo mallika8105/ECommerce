@@ -20,6 +20,20 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
   const navigate = useNavigate();
 
+  const formatIndianCurrency = (price: number) => {
+    const parts = price.toFixed(2).split('.');
+    let integerPart = parts[0];
+    if (integerPart.length > 3) {
+      let lastThree = integerPart.substring(integerPart.length - 3);
+      let otherNumbers = integerPart.substring(0, integerPart.length - 3);
+      if (otherNumbers.length > 0) {
+        lastThree = ',' + lastThree;
+      }
+      integerPart = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+    }
+    return `₹ ${integerPart}${parts.length > 1 ? '.' + parts[1] : ''}`;
+  };
+
   const handleCardClick = () => {
     console.log('ProductCard: Navigating to:', `/products/${product.id}`, 'with ID:', product.id); // More detailed debug log
     navigate(`/products/${product.id}`); // Navigate to product details page (corrected to plural 'products')
@@ -35,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
             {product.name}
           </a>
         </h3>
-        <p className="product-card-price">${product.price.toFixed(2)}</p>
+        <p className="product-card-price">{formatIndianCurrency(product.price)}</p>
         <div className="product-card-rating">
           {'⭐'.repeat(Math.floor(product.rating))} ({product.reviews} reviews)
         </div>
