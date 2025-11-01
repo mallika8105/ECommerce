@@ -42,6 +42,7 @@ import Layout from './components/Layout'; // Import Layout component
 import { supabase } from './supabaseClient'; // Import supabase client
 
 function App() {
+  console.log('App.tsx: App component rendered.');
   const [casualWearCategoryId, setCasualWearCategoryId] = React.useState<string | null>(null);
 
   React.useEffect(() => {

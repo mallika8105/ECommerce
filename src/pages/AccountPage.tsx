@@ -26,7 +26,12 @@ const AccountPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      console.log('AccountPage: fetchProfile triggered.');
+      // Only proceed if AuthContext has finished loading AND a user is available
+      if (loading || !user) {
+        console.log('AccountPage: Skipping fetchProfile - AuthContext still loading or user not available.');
+        return;
+      }
 
       // Initialize edit states with current user data
       setEditName(user.user_metadata?.name || '');
@@ -42,11 +47,11 @@ const AccountPage: React.FC = () => {
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-          console.error('Error fetching profile:', error);
+          console.error('AccountPage: Error fetching profile:', error);
           setUpdateMessage(`Error fetching profile: ${error.message}`);
         } else if (error && error.code === 'PGRST116') {
           // Profile not found, create a new one
-          console.log('Profile not found, attempting to create a new one.');
+          console.log('AccountPage: Profile not found, attempting to create a new one.');
           const { error: createError } = await supabase
             .from('profiles')
             .upsert({
@@ -57,7 +62,7 @@ const AccountPage: React.FC = () => {
             }, { onConflict: 'id' });
 
           if (createError) {
-            console.error('Error creating profile:', createError);
+            console.error('AccountPage: Error creating profile:', createError);
             setUpdateMessage(`Error creating profile: ${createError.message}`);
           } else {
             // Successfully created, now fetch it again
@@ -81,16 +86,16 @@ const AccountPage: React.FC = () => {
           setEditPhone(data.phone || user.phone || '');
         }
       } catch (err: any) {
-        console.error('Unexpected error fetching profile:', err);
+        console.error('AccountPage: Unexpected error fetching profile:', err);
         setUpdateMessage(`Unexpected error fetching profile: ${err.message}`);
       } finally {
-        console.log('fetchProfile completed. Profile data:', profile);
-        console.log('fetchProfile completed. User:', user);
+        console.log('AccountPage: fetchProfile completed. Profile data:', profile);
+        console.log('AccountPage: fetchProfile completed. User:', user);
       }
     };
 
     fetchProfile();
-  }, [user, session]); // Re-fetch if user or session changes
+  }, [user, loading, session]); // Re-fetch if user, loading, or session changes
 
   useEffect(() => {
     if (!loading && !user) {
@@ -144,14 +149,17 @@ const AccountPage: React.FC = () => {
       if (profileError) throw profileError;
 
       setUpdateMessage('Profile updated successfully!');
-      // Refresh user session to get updated metadata
-      await supabase.auth.refreshSession();
+      // The AuthContext's onAuthStateChange listener should handle session updates.
+      // Explicitly refreshing here might cause unnecessary re-renders or delays.
 
     } catch (err: any) {
       console.error('Error updating profile:', err);
       setUpdateMessage(`Failed to update profile: ${err.message || 'An unexpected error occurred.'}`);
     } finally {
-      setIsUpdating(false);
+      // Add a small delay to ensure UI updates correctly after message
+      setTimeout(() => {
+        setIsUpdating(false);
+      }, 100); // 100ms delay
     }
   };
 
