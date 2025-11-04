@@ -35,6 +35,7 @@ const AdminLoginPage: React.FC = () => {
       // In a real scenario, signIn would handle setting isAdmin based on actual auth
       // For mock, we'll directly set isAdmin if the mock credentials match
       // This requires a change in AuthContext to allow setting isAdmin directly or a mock signIn
+      // For now, let's assume signIn can handle mock credentials and set isAdmin
       const { user: loggedInUser, error } = await signIn(email, password);
 
       if (error) {

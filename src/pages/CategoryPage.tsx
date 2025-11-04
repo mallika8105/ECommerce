@@ -42,20 +42,10 @@ const CategoryPage: React.FC = () => {
             .single();
 
           if (categoryError) {
-            // It's better to check for a specific error code if Supabase provides one for "not found"
-            // For now, we'll assume any error here could mean the category is not found.
-            setCategoryName('Category Not Found');
-            setProducts([]);
-            setLoading(false);
-            return;
+            throw new Error(categoryError.message);
           }
           if (categoryData) {
             setCategoryName((categoryData as Category).name); // Explicitly cast to Category interface
-          } else {
-            setCategoryName('Category Not Found');
-            setProducts([]);
-            setLoading(false);
-            return;
           }
         }
 
@@ -128,7 +118,7 @@ const CategoryPage: React.FC = () => {
                   <img src={product.image_url} alt={product.name} className="product-image" />
                   <h3 className="product-name">{product.name}</h3>
                 </Link>
-                <p className="product-price">${product.price.toFixed(2)}</p>
+                <p className="product-price">₹{product.price.toFixed(2)}</p>
                 <Button variant="primary" onClick={() => addToCart(product)}>Add to Cart</Button>
               </Card>
             ))}

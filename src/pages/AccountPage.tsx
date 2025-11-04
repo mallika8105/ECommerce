@@ -40,6 +40,7 @@ const AccountPage: React.FC = () => {
 
       // Fetch additional profile data from 'profiles' table
       try {
+        console.log('AccountPage: fetchProfile: Querying profiles table for user ID:', user.id);
         const { data, error } = await supabase
           .from('profiles')
           .select('name, email, phone') // Select relevant fields
@@ -47,11 +48,11 @@ const AccountPage: React.FC = () => {
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-          console.error('AccountPage: Error fetching profile:', error);
+          console.error('AccountPage: fetchProfile: Error fetching profile:', error);
           setUpdateMessage(`Error fetching profile: ${error.message}`);
         } else if (error && error.code === 'PGRST116') {
           // Profile not found, create a new one
-          console.log('AccountPage: Profile not found, attempting to create a new one.');
+          console.log('AccountPage: fetchProfile: Profile not found for user:', user.id, ', attempting to create a new one.');
           const { error: createError } = await supabase
             .from('profiles')
             .upsert({
@@ -62,21 +63,27 @@ const AccountPage: React.FC = () => {
             }, { onConflict: 'id' });
 
           if (createError) {
-            console.error('AccountPage: Error creating profile:', createError);
+            console.error('AccountPage: fetchProfile: Error creating profile:', createError);
             setUpdateMessage(`Error creating profile: ${createError.message}`);
           } else {
+            console.log('AccountPage: fetchProfile: Profile created successfully for user:', user.id, '. Re-fetching profile data.');
             // Successfully created, now fetch it again
-            const { data: newData } = await supabase
+            const { data: newData, error: newFetchError } = await supabase
               .from('profiles')
               .select('name, email, phone')
               .eq('id', user.id)
               .single();
-            if (newData) {
+
+            if (newFetchError) {
+              console.error('AccountPage: fetchProfile: Error re-fetching profile after creation:', newFetchError);
+              setUpdateMessage(`Error re-fetching profile: ${newFetchError.message}`);
+            } else if (newData) {
               setProfile(newData as Profile);
               setEditName(newData.name || user.user_metadata?.name || '');
               setEditEmail(newData.email || user.email || '');
               setEditPhone(newData.phone || user.phone || '');
-              setUpdateMessage('Profile created successfully!');
+              setUpdateMessage('Profile created and fetched successfully!');
+              console.log('AccountPage: fetchProfile: Re-fetched profile data:', newData);
             }
           }
         } else if (data) {
@@ -84,13 +91,14 @@ const AccountPage: React.FC = () => {
           setEditName(data.name || user.user_metadata?.name || '');
           setEditEmail(data.email || user.email || '');
           setEditPhone(data.phone || user.phone || '');
+          console.log('AccountPage: fetchProfile: Existing profile data found:', data);
         }
       } catch (err: any) {
-        console.error('AccountPage: Unexpected error fetching profile:', err);
+        console.error('AccountPage: fetchProfile: Unexpected error:', err);
         setUpdateMessage(`Unexpected error fetching profile: ${err.message}`);
       } finally {
-        console.log('AccountPage: fetchProfile completed. Profile data:', profile);
-        console.log('AccountPage: fetchProfile completed. User:', user);
+        console.log('AccountPage: fetchProfile completed. Final Profile state:', profile);
+        console.log('AccountPage: fetchProfile completed. Current User state:', user);
       }
     };
 

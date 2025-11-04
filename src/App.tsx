@@ -22,7 +22,6 @@ import AboutUsPage from './pages/AboutUsPage'; // Import AboutUsPage
 import ContactUsPage from './pages/ContactUsPage'; // Import ContactUsPage
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
 import TermsOfServicePage from './pages/TermsOfServicePage'; // Import TermsOfServicePage
-import AccountPage from './pages/AccountPage'; // Import AccountPage
 
 // Admin Pages
 import AdminDashboardHome from './admin/AdminDashboardHome';
@@ -34,53 +33,26 @@ import ReportsPage from './admin/ReportsPage';
 import AdminDashboard from './admin/AdminDashboard'; // Import AdminDashboard
 import ProtectedRoute from './admin/ProtectedRoute'; // Import ProtectedRoute
 import AdminLoginPage from './admin/AdminLoginPage';
-import SubCategoryPage from './admin/SubCategoryPage'; // Import the new SubCategoryPage
 // import AdminSidebar from './admin/AdminSidebar'; // AdminSidebar is not directly used in App.tsx's main render
 import { CartProvider, useCart } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 import CartDrawer from './components/CartDrawer'; // Import CartDrawer
 import Layout from './components/Layout'; // Import Layout component
-import { supabase } from './supabaseClient'; // Import supabase client
-
 function App() {
-  console.log('App.tsx: App component rendered.');
-  const [casualWearCategoryId, setCasualWearCategoryId] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const fetchCasualWearCategoryId = async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('name', 'Casual Wear'); // Removed .single()
-
-      if (error) {
-        console.error('Error fetching Casual Wear category ID:', error);
-      } else if (data && data.length > 0) { // Check if data exists and is not empty
-        setCasualWearCategoryId(data[0].id); // Use the first result
-      } else {
-        console.warn('Casual Wear category not found.');
-        setCasualWearCategoryId(null);
-      }
-    };
-
-    fetchCasualWearCategoryId();
-  }, []);
-
   return (
     <ErrorBoundary>
       <Router>
-        <CartProvider>
-          <AppContent casualWearCategoryId={casualWearCategoryId} />
-        </CartProvider>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </AuthProvider>
       </Router>
     </ErrorBoundary>
   );
 }
 
-interface AppContentProps {
-  casualWearCategoryId: string | null;
-}
-
-const AppContent: React.FC<AppContentProps> = ({ casualWearCategoryId }) => {
+const AppContent: React.FC = () => {
   const { isDrawerOpen, toggleDrawer } = useCart();
 
   return (
@@ -95,7 +67,6 @@ const AppContent: React.FC<AppContentProps> = ({ casualWearCategoryId }) => {
                 <Route path="dashboard" element={<AdminDashboardHome />} />
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="categories" element={<CategoryManagement />} />
-                <Route path="categories/:categoryId/subcategories" element={<SubCategoryPage />} /> {/* New route for subcategories */}
                 <Route path="orders" element={<OrdersManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="reports" element={<ReportsPage />} />
@@ -109,19 +80,15 @@ const AppContent: React.FC<AppContentProps> = ({ casualWearCategoryId }) => {
           <Route path="/shop" element={<ProductListing />} />
           <Route path="/categories/:categoryId/subcategories" element={<SubCategoriesPage />} />
           <Route path="/products/subcategory/:subcategoryId" element={<ProductListing />} />
-          <Route path="/products/:productId" element={<ProductDetails />} />
+          <Route path="/product/:productId" element={<ProductDetails />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="/account" element={<AccountPage />} /> {/* New route for AccountPage */}
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/collections" element={<CollectionsPage />} />
-          {casualWearCategoryId && (
-            <Route path="/casual-wear" element={<ProductListing categoryId={casualWearCategoryId} />} />
-          )}
           <Route path="/products/category/:categoryId" element={<CategoryPage />} />
           <Route path="/bestsellers" element={<BestsellerPage />} />
           <Route path="/about-us" element={<AboutUsPage />} />

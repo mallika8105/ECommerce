@@ -11,13 +11,11 @@ interface Product {
   id: string;
   name: string;
   category_id: string;
-  subcategory_id?: string; // New field for subcategory
   price: number;
   stock: number;
   image_url: string;
   product_code: string;
   category_name?: string;
-  subcategory_name?: string; // For display purposes
 }
 
 interface Category {
@@ -25,23 +23,15 @@ interface Category {
   name: string;
 }
 
-interface SubCategory {
-  id: string;
-  name: string;
-  category_id: string; // To filter subcategories by parent category
-}
-
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<SubCategory[]>([]); // New state for subcategories
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<Omit<Product, 'id' | 'category_name' | 'subcategory_name'>>({
+  const [formData, setFormData] = useState<Omit<Product, 'id' | 'category_name'>>({
     name: '',
     category_id: '',
-    subcategory_id: '', // Initialize subcategory_id
     price: 0,
     stock: 0,
     image_url: '',
@@ -52,7 +42,6 @@ const ProductManagement: React.FC = () => {
 
   useEffect(() => {
     fetchCategories();
-    fetchSubCategories(); // Fetch subcategories
     fetchProducts();
   }, []);
 
@@ -68,23 +57,11 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const fetchSubCategories = async () => {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .select('id, name, category_id');
-    
-    if (error) {
-      console.error('Error fetching subcategories:', error);
-    } else if (data) {
-      setSubcategories(data);
-    }
-  };
-
   const fetchProducts = async () => {
     setLoading(true);
     try {
       console.log('Fetching products...');
-      const { data: productsData, error: productsError } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .select(`
           *,
@@ -92,25 +69,21 @@ const ProductManagement: React.FC = () => {
         `)
         .order('name', { ascending: true });
 
-      if (productsError) {
-        console.error('Error fetching products:', productsError);
+      if (error) {
+        console.error('Error fetching products:', error);
         setError('Failed to fetch products.');
         setProducts([]);
       } else {
-        console.log('Products fetched:', productsData);
-        if (Array.isArray(productsData)) {
-          const productsWithNames = productsData.map(product => {
-            const subcategory = subcategories.find(subcat => subcat.id === product.subcategory_id);
-            return {
-              ...product,
-              category_name: product.categories?.name,
-              subcategory_name: subcategory?.name // Manually map subcategory name
-            };
-          });
-          setProducts(productsWithNames);
+        console.log('Products fetched:', data);
+        if (Array.isArray(data)) {
+          const productsWithCategories = data.map(product => ({
+            ...product,
+            category_name: product.categories?.name
+          }));
+          setProducts(productsWithCategories);
           setError(null);
         } else {
-          console.error('Unexpected data format:', productsData);
+          console.error('Unexpected data format:', data);
           setError('Invalid data format received.');
           setProducts([]);
         }
@@ -130,7 +103,6 @@ const ProductManagement: React.FC = () => {
     setFormData({
       name: '',
       category_id: '',
-      subcategory_id: '', // Reset subcategory_id
       price: 0,
       stock: 0,
       image_url: '',
@@ -145,7 +117,6 @@ const ProductManagement: React.FC = () => {
     setFormData({
       name: product.name,
       category_id: product.category_id,
-      subcategory_id: product.subcategory_id || '', // Set subcategory_id
       price: product.price,
       stock: product.stock,
       product_code: product.product_code,
@@ -192,7 +163,6 @@ const ProductManagement: React.FC = () => {
     const productData = {
       name: formData.name,
       category_id: formData.category_id,
-      subcategory_id: formData.subcategory_id || null, // Include subcategory_id
       price: Number(formData.price),
       stock: Number(formData.stock),
       product_code: formData.product_code,
@@ -225,10 +195,6 @@ const ProductManagement: React.FC = () => {
     }
     setIsModalOpen(false);
   };
-
-  const filteredSubcategories = categories.length > 0 && formData.category_id
-    ? subcategories.filter(subcat => subcat.category_id === formData.category_id)
-    : [];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -268,7 +234,6 @@ const ProductManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Image</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Sub-Category</th> {/* New column */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stock</th>
@@ -293,7 +258,6 @@ const ProductManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.category_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.subcategory_name}</td> {/* Display subcategory name */}
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.product_code}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.stock}</td>
@@ -348,36 +312,6 @@ const ProductManagement: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* New Sub-Category Dropdown */}
-          {formData.category_id && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Category</label>
-              <div className="relative">
-                <select
-                  name="subcategory_id"
-                  value={formData.subcategory_id}
-                  onChange={handleFormChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    bg-white text-gray-900"
-                >
-                  <option value="">Select a sub-category (optional)</option>
-                  {filteredSubcategories.map((subcat) => (
-                    <option key={subcat.id} value={subcat.id}>
-                      {subcat.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          )}
-
           <Input
             label="Product Code"
             name="product_code"

@@ -9,7 +9,7 @@ const AdminSidebar: React.FC = () => {
     { path: "/admin/dashboard", icon: <Home size={20} />, label: "Dashboard" },
     { path: "/admin/users", icon: <Users size={20} />, label: "User Management" },
     { path: "/admin/products", icon: <ShoppingBag size={20} />, label: "Product Management" },
-    { path: "/admin/categories", icon: <ShoppingBag size={20} />, label: "Category Management" },
+    { path: "/admin/categories", icon: <ShoppingBag size={20} />, label: "Categories" },
     { path: "/admin/orders", icon: <Package size={20} />, label: "Order Management" },
     { path: "/admin/reports", icon: <BarChart2 size={20} />, label: "Reports" },
   ];

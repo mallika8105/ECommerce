@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../supabaseClient'; // Import supabase client
 import './CollectionsPage.css';
 
 interface Category {
   id: string;
   name: string;
-  description?: string;
-  image_url?: string;
+  description?: string; // Optional description
+  image_url?: string; // Optional image URL
 }
 
 const CollectionsPage: React.FC = () => {
@@ -15,38 +15,44 @@ const CollectionsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Order of categories
   const categoryOrder = [
     "Men's Fashion",
     "Women's Fashion",
     "Kid's Fashion",
-    "Sports And Fitness",
     "Eyewear",
-    "Electronics And Gadgets",
-    "Home And Living",
-    "Gifts And Occassions"
+    "Sports and Fitness",
+    "Electronics and Gadgets",
+    "Home and Living",
+    "Gifts and Occasions"
   ];
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase.from('categories').select('*');
-        if (error) throw new Error(error.message);
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*');
 
-        const filtered = (data || []).filter(c => c.name !== 'Casual Wear');
+        if (error) {
+          throw new Error(error.message);
+        }
 
-        const sorted = [...filtered].sort((a, b) => {
+        // Sort the categories according to the specified order
+        const sortedCategories = [...(data || [])].sort((a, b) => {
           const indexA = categoryOrder.indexOf(a.name);
           const indexB = categoryOrder.indexOf(b.name);
+          // If category is not in the order list, put it at the end
           if (indexA === -1) return 1;
           if (indexB === -1) return -1;
           return indexA - indexB;
         });
 
-        setCategories(sorted);
+        setCategories(sortedCategories);
         setError(null);
       } catch (err: any) {
         setError(`Failed to fetch categories: ${err.message}`);
-        setCategories([]);
+        setCategories([]); // Clear categories on error
       } finally {
         setLoading(false);
       }
@@ -55,23 +61,25 @@ const CollectionsPage: React.FC = () => {
     fetchCategories();
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="collections-container">
-        <main className="collections-main">
+        <main className="collections-main flex justify-center items-center">
           <p className="loading-message">Loading categories...</p>
         </main>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="collections-container">
-        <main className="collections-main">
+        <main className="collections-main flex justify-center items-center">
           <p className="error-message">Error: {error}</p>
         </main>
       </div>
     );
+  }
 
   return (
     <div className="collections-container">
@@ -81,18 +89,14 @@ const CollectionsPage: React.FC = () => {
           <div className="category-grid">
             {categories.map((category) => (
               <div key={category.id} className="category-card">
-                <Link to={`/categories/${category.id}/subcategories`} className="category-link">
-                  {category.image_url ? (
+                <Link to={`/categories/${category.id}/subcategories`}>
+                  {category.image_url && (
                     <img src={category.image_url} alt={category.name} className="category-image" />
-                  ) : (
-                    <div className="category-image placeholder">No image</div>
                   )}
-                  <div className="category-content">
-                    <h3 className="category-name">{category.name}</h3>
-                    {category.description && (
-                      <p className="category-description">{category.description}</p>
-                    )}
-                  </div>
+                  <h3 className="category-name">{category.name}</h3>
+                  {category.description && (
+                    <p className="category-description">{category.description}</p>
+                  )}
                 </Link>
               </div>
             ))}

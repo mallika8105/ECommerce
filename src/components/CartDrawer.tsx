@@ -54,7 +54,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   <img src={item.image_url} alt={item.name} className="w-20 h-20 object-contain rounded-md mr-4" />
                   <div className="flex-grow">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-orange-600 font-bold text-md">${item.price.toFixed(2)}</p>
+                    <p className="text-orange-600 font-bold text-md">₹{item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
@@ -83,7 +83,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             <div className="border-t border-gray-200 pt-4 mt-4">
               <div className="flex justify-between text-lg font-bold text-gray-900 mb-4">
                 <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>₹{calculateTotal().toFixed(2)}</span>
               </div>
               <Link to="/checkout" onClick={onClose}>
                 <Button variant="primary" size="large" className="w-full bg-black text-white hover:bg-gray-800 transition-colors duration-200">

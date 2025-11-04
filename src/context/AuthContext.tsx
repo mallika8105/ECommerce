@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { supabase } from '../supabaseClient';
+import type { User } from '@supabase/supabase-js'; // Keep User type for now, might need to define a custom User type later
+import { supabase } from '../supabaseClient'; // Import supabase client
 import type { Session } from '@supabase/supabase-js';
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -21,48 +20,119 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Helper function to create a profile if it doesn't exist
-  const createProfileIfNotExist = useCallback(async (currentUser: User) => {
-    // This function should not be called for mock admin users, but adding a safeguard
-    if (currentUser.id === 'mock-admin-id') {
-      console.log('AuthContext: Skipping profile creation for mock admin user.');
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') { // PGRST116 means no rows found
-        // Profile does not exist, create it
-        const { error: createError } = await supabase.from('profiles').insert({
-          id: currentUser.id,
-          email: currentUser.email,
-          phone: currentUser.phone,
-          name: currentUser.user_metadata?.name || 'New User',
-          role: 'customer',
-        });
-        if (createError) {
-          console.error('AuthContext: Error creating profile for new user:', createError);
-        } else {
-          console.log('AuthContext: Profile created for user:', currentUser.id);
+  useEffect(() => {
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        // First check for mock admin session
+        const adminLoggedIn = localStorage.getItem('adminLoggedIn');
+        if (adminLoggedIn === 'true') {
+          const mockUser: User = {
+            id: 'mock-admin-id',
+            email: 'admin@example.com',
+            app_metadata: { provider: 'email' },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            user_metadata: { role: 'admin' },
+          };
+          
+          const mockSession: Session = {
+            access_token: 'mock-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'mock-refresh-token',
+            user: mockUser,
+            expires_at: Date.now() + 3600000,
+          };
+          
+          setUser(mockUser);
+          setSession(mockSession);
+          setIsAdmin(true);
+          setLoading(false);
+          return; // Exit early as we've restored the mock admin session
         }
-      } else if (error) {
-        console.error('AuthContext: Error checking existing profile:', error);
+
+        // Check for existing Supabase session
+        const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (existingSession?.user) {
+          setSession(existingSession);
+          setUser(existingSession.user);
+          
+          // Check for admin status in user metadata first
+          if (existingSession.user.user_metadata?.role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            // Fallback to profiles table check
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', existingSession.user.id)
+              .single();
+            
+            setIsAdmin(profile?.role?.toLowerCase() === 'admin');
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Only clear everything if there's no admin session
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+          setUser(null);
+          setSession(null);
+          setIsAdmin(false);
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('AuthContext: Unexpected error in createProfileIfNotExist:', err);
-    }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, currentSession) => {
+        // Don't override mock admin session
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+          return;
+        }
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          // Check user metadata first
+          if (currentSession.user.user_metadata?.role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', currentSession.user.id)
+                .single();
+              
+              setIsAdmin(profile?.role?.toLowerCase() === 'admin');
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+              setIsAdmin(false);
+            }
+          }
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    // Initialize
+    initializeAuth();
+
+    // Cleanup
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const checkAdminStatus = useCallback(async (userId: string) => {
-    if (userId === 'mock-admin-id') {
-      setIsAdmin(true);
-      console.log('AuthContext: Skipping admin status check for mock admin user.');
-      return;
-    }
+  const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -79,80 +149,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Error fetching user role:', error);
       setIsAdmin(false);
+    } finally {
+      // Ensure loading is handled if this is part of an initial load, though useEffect's finally should cover it.
+      // This is more for robustness if checkAdminStatus is called independently.
     }
-  }, []);
-
-  useEffect(() => {
-    console.log('AuthContext: useEffect triggered. Initializing auth...');
-    setLoading(true); // Ensure loading is true at the very start of auth process
-
-    // Set up auth state listener for all changes, including initial session
-    console.log('AuthContext: Setting up onAuthStateChange listener.');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        console.log('AuthContext: onAuthStateChange event triggered. Event:', _event, 'Session:', currentSession);
-
-        try {
-          // Handle mock admin session separately if it's active
-          const adminLoggedIn = localStorage.getItem('adminLoggedIn');
-          if (adminLoggedIn === 'true') {
-            console.log('AuthContext: Mock admin session found. Setting mock user/session.');
-            const mockUser: User = {
-              id: 'mock-admin-id',
-              email: 'admin@example.com',
-              app_metadata: { provider: 'email' },
-              aud: 'authenticated',
-              created_at: new Date().toISOString(),
-              user_metadata: { role: 'admin' },
-            };
-            
-            const mockSession: Session = {
-              access_token: 'mock-token',
-              token_type: 'bearer',
-              expires_in: 3600,
-              refresh_token: 'mock-refresh-token',
-              user: mockUser,
-              expires_at: Date.now() + 3600000,
-            };
-            
-            setUser(mockUser);
-            setSession(mockSession);
-            setIsAdmin(true);
-            console.log('AuthContext: Mock admin session restored.');
-          } else {
-            // Process real Supabase session
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
-            console.log('AuthContext: User state updated to:', currentSession?.user ?? null); // Added log
-            
-            if (currentSession?.user) {
-              // For real users, ensure profile exists and check admin status
-              await createProfileIfNotExist(currentSession.user);
-              await checkAdminStatus(currentSession.user.id);
-            } else {
-              setIsAdmin(false); // No user, not admin
-              console.log('AuthContext: onAuthStateChange: No current user.');
-            }
-          }
-        } catch (error) {
-          console.error('AuthContext: onAuthStateChange error:', error);
-          setUser(null);
-          setSession(null);
-          setIsAdmin(false);
-        } finally {
-          // This single call handles all cases for both mock and real sessions.
-          setLoading(false);
-          console.log('AuthContext: Auth state processed. Loading set to false. Current User:', user);
-        }
-      }
-    );
-
-    // Cleanup
-    return () => {
-      console.log('AuthContext: Cleaning up auth state listener.');
-      subscription.unsubscribe();
-    };
-  }, [createProfileIfNotExist, checkAdminStatus]); // Dependencies for useCallback functions
+  };
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
