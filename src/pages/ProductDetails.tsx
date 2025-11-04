@@ -45,6 +45,11 @@ const ProductDetails: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
+  // Scroll to top when component mounts or productId changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [productId]);
+
   useEffect(() => {
     console.log('ProductDetails useEffect triggered. productId:', productId); // New debug log
     const fetchProductDetails = async () => {

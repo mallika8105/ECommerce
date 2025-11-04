@@ -16,6 +16,8 @@ interface Product {
   image_url: string;
   product_code: string;
   category_name?: string;
+  is_featured?: boolean;
+  is_bestseller?: boolean;
 }
 
 interface Category {
@@ -35,7 +37,9 @@ const ProductManagement: React.FC = () => {
     price: 0,
     stock: 0,
     image_url: '',
-    product_code: ''
+    product_code: '',
+    is_featured: false,
+    is_bestseller: false
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +110,9 @@ const ProductManagement: React.FC = () => {
       price: 0,
       stock: 0,
       image_url: '',
-      product_code: ''
+      product_code: '',
+      is_featured: false,
+      is_bestseller: false
     });
     setIsModalOpen(true);
   };
@@ -120,7 +126,9 @@ const ProductManagement: React.FC = () => {
       price: product.price,
       stock: product.stock,
       product_code: product.product_code,
-      image_url: product.image_url || ''
+      image_url: product.image_url || '',
+      is_featured: product.is_featured || false,
+      is_bestseller: product.is_bestseller || false
     });
     setIsModalOpen(true);
   };
@@ -143,10 +151,14 @@ const ProductManagement: React.FC = () => {
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' 
+      [name]: type === 'checkbox' 
+        ? checked
+        : name === 'price' || name === 'stock' 
         ? parseFloat(value) || 0
         : value
     }));
@@ -166,29 +178,50 @@ const ProductManagement: React.FC = () => {
       price: Number(formData.price),
       stock: Number(formData.stock),
       product_code: formData.product_code,
-      image_url: formData.image_url || null // Allow null if no image URL is provided
+      image_url: formData.image_url || null,
+      is_featured: Boolean(formData.is_featured),
+      is_bestseller: Boolean(formData.is_bestseller)
     };
 
+    console.log('Form Data:', formData);
+    console.log('Product Data to save:', productData);
+
     if (isEditMode && currentProduct) {
-      const { error } = await supabase
+      console.log('Updating product ID:', currentProduct.id);
+      const { data, error } = await supabase
         .from('products')
         .update(productData)
-        .eq('id', currentProduct.id);
+        .eq('id', currentProduct.id)
+        .select();
+      
+      console.log('Update response - data:', data, 'error:', error);
+      
       if (error) {
         console.error('Error updating product:', error);
-        setError('Failed to update product.');
+        setError('Failed to update product: ' + error.message);
       } else {
-        fetchProducts(); // Re-fetch products to get the updated list
+        // Even if data is empty (RLS blocking select), if no error then update succeeded
+        console.log('Product updated successfully');
+        await fetchProducts(); // Re-fetch products to get the updated list
         setError(null);
+        
+        // Show success message
+        alert('Product updated successfully!');
       }
     } else {
-      const { error } = await supabase
+      console.log('Inserting new product');
+      const { data, error } = await supabase
         .from('products')
-        .insert([productData]);
+        .insert([productData])
+        .select();
+      
+      console.log('Insert response - data:', data, 'error:', error);
+      
       if (error) {
         console.error('Error adding product:', error);
-        setError('Failed to add product.');
+        setError('Failed to add product: ' + error.message);
       } else {
+        console.log('Product added successfully:', data);
         fetchProducts(); // Re-fetch products to get the new product
         setError(null);
       }
@@ -237,6 +270,7 @@ const ProductManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tags</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -261,6 +295,20 @@ const ProductManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.product_code}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.stock}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-1">
+                        {product.is_featured && (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Featured
+                          </span>
+                        )}
+                        {product.is_bestseller && (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Bestseller
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button variant="secondary" size="small" className="mr-2" onClick={() => handleEditProduct(product)}>
                         <Edit size={16} className="mr-1" /> Edit
@@ -343,6 +391,37 @@ const ProductManagement: React.FC = () => {
             onChange={handleFormChange}
             required
           />
+          
+          <div className="space-y-3 pt-4 border-t border-gray-200">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_featured"
+                checked={formData.is_featured}
+                onChange={handleFormChange}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span className="text-sm font-medium text-gray-900">
+                Mark as Featured Product
+                <span className="block text-xs text-gray-500">Will appear in Featured Products section on homepage</span>
+              </span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_bestseller"
+                checked={formData.is_bestseller}
+                onChange={handleFormChange}
+                className="w-4 h-4 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 focus:ring-2"
+              />
+              <span className="text-sm font-medium text-gray-900">
+                Mark as Bestseller
+                <span className="block text-xs text-gray-500">Will appear in Bestsellers carousel and page</span>
+              </span>
+            </label>
+          </div>
+          
           <div className="flex justify-end space-x-2 mt-6">
             <Button type="button" variant="secondary" onClick={handleModalClose}>
               Cancel

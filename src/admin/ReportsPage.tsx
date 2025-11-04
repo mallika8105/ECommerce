@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import Input from '../components/Input';
 import Dropdown from '../components/Dropdown';
 import EmptyState from '../components/EmptyState';
-import { Download, BarChart as BarChartIcon, LineChart as LineChartIcon } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../supabaseClient'; // Import supabase client
 
@@ -83,15 +83,15 @@ const ReportsPage: React.FC = () => {
       const aggregatedData = aggregateOrdersByDate(orders);
       setReportData(aggregatedData);
 
-    } catch (err: any) {
-      console.error('Error fetching report data:', err.message);
+    } catch (err) {
+      console.error('Error fetching report data:', err);
       setError('Failed to fetch report data.');
     } finally {
       setLoading(false);
     }
   };
 
-  const aggregateOrdersByDate = (orders: any[]): ReportDataPoint[] => {
+  const aggregateOrdersByDate = (orders: Array<{ created_at: string; total: number }>): ReportDataPoint[] => {
     const dailyData: { [key: string]: { sales: number; revenue: number } } = {};
 
     orders.forEach(order => {

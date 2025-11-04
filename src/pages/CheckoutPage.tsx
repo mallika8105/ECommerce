@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import { useCart } from '../context/CartContext'; // Import useCart
-import './CheckoutPage.css'; // Import the custom CSS file
-
-// The Product interface from CartContext is sufficient, no need for a separate CartItem here.
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
+import './CheckoutPage.css';
 
 const CheckoutPage: React.FC = () => {
-  const { cartItems } = useCart(); // Use cartItems from CartContext
+  const { cartItems, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
     addressLine1: '',
@@ -17,12 +21,90 @@ const CheckoutPage: React.FC = () => {
     state: '',
     zipCode: '',
     country: '',
+    phone: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState('credit-card');
+  
+  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [loadingAddress, setLoadingAddress] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-  const shipping = 10.00; // Placeholder
+  const shipping = subtotal > 500 ? 0 : 50.00; // Free shipping above ₹500
   const total = subtotal + shipping;
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Save current page to return after login
+      sessionStorage.setItem('redirectAfterLogin', '/checkout');
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Fetch user's address from profile
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (!user) return;
+      
+      setLoadingAddress(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, phone, address')
+          .eq('id', user.id)
+          .single();
+
+        console.log('Profile data fetched:', data);
+        console.log('Profile error:', error);
+
+        if (error) {
+          console.error('Supabase error:', error);
+          // Don't throw - just use defaults
+          setLoadingAddress(false);
+          return;
+        }
+
+        if (data) {
+          // Parse address if it's stored as JSON string
+          let addressData = {};
+          if (data.address) {
+            if (typeof data.address === 'string') {
+              try {
+                addressData = JSON.parse(data.address);
+                console.log('Parsed address:', addressData);
+              } catch (e) {
+                console.error('JSON parse error:', e);
+                addressData = {};
+              }
+            } else if (typeof data.address === 'object') {
+              addressData = data.address;
+            }
+          }
+
+          const newAddress = {
+            fullName: data.full_name || '',
+            phone: data.phone || '',
+            addressLine1: (addressData as any)?.addressLine1 || '',
+            addressLine2: (addressData as any)?.addressLine2 || '',
+            city: (addressData as any)?.city || '',
+            state: (addressData as any)?.state || '',
+            zipCode: (addressData as any)?.zipCode || '',
+            country: (addressData as any)?.country || 'India',
+          };
+
+          console.log('Setting address to:', newAddress);
+          setShippingAddress(newAddress);
+        }
+      } catch (err) {
+        console.error('Error fetching address:', err);
+      } finally {
+        setLoadingAddress(false);
+      }
+    };
+
+    fetchAddress();
+  }, [user]);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,15 +115,120 @@ const CheckoutPage: React.FC = () => {
     setPaymentMethod(e.target.value);
   };
 
-  const handlePlaceOrder = () => {
-    console.log('Placing order with:', { shippingAddress, paymentMethod, cartItems, total });
-    // Implement order placement logic
+  const validateAddress = () => {
+    const required = ['fullName', 'addressLine1', 'city', 'state', 'zipCode', 'country', 'phone'];
+    for (const field of required) {
+      if (!shippingAddress[field as keyof typeof shippingAddress]) {
+        setError(`Please fill in ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+        return false;
+      }
+    }
+    return true;
   };
+
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!validateAddress()) {
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      setError('Your cart is empty');
+      return;
+    }
+
+    setPlacingOrder(true);
+    setError(null);
+
+    try {
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: user.id,
+            total: total,
+            status: 'pending',
+            payment_method: paymentMethod,
+            payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
+            shipping_address: JSON.stringify(shippingAddress),
+          },
+        ])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cartItems.map((item) => ({
+        order_id: order.id,
+        product_id: item.id,
+        quantity: item.quantity || 1,
+        price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Update user's address in profile if changed
+      await supabase
+        .from('profiles')
+        .update({
+          full_name: shippingAddress.fullName,
+          phone: shippingAddress.phone,
+          address: JSON.stringify({
+            addressLine1: shippingAddress.addressLine1,
+            addressLine2: shippingAddress.addressLine2,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zipCode: shippingAddress.zipCode,
+            country: shippingAddress.country,
+          }),
+        })
+        .eq('id', user.id);
+
+      // Clear cart
+      clearCart();
+
+      // Navigate to order confirmation
+      navigate(`/order-confirmation/${order.id}`);
+    } catch (err: any) {
+      console.error('Error placing order:', err);
+      setError(err.message || 'Failed to place order. Please try again.');
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
+
+  if (authLoading || loadingAddress) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
 
   return (
     <div className="checkout-container">
       <main className="checkout-main">
         <h1 className="checkout-title">Checkout</h1>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+            {error}
+          </div>
+        )}
 
         <div className="checkout-grid">
           {/* Shipping Address & Payment */}
@@ -49,13 +236,70 @@ const CheckoutPage: React.FC = () => {
             <Card className="shipping-address-card">
               <h2 className="card-title">Shipping Address</h2>
               <form className="address-form">
-                <Input label="Full Name" name="fullName" value={shippingAddress.fullName} onChange={handleAddressChange} className="text-sm" />
-                <Input label="Address Line 1" name="addressLine1" value={shippingAddress.addressLine1} onChange={handleAddressChange} className="text-sm" />
-                <Input label="Address Line 2 (Optional)" name="addressLine2" value={shippingAddress.addressLine2} onChange={handleAddressChange} className="text-sm" />
-                <Input label="City" name="city" value={shippingAddress.city} onChange={handleAddressChange} className="text-sm" />
-                <Input label="State/Province" name="state" value={shippingAddress.state} onChange={handleAddressChange} className="text-sm" />
-                <Input label="Zip/Postal Code" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} className="text-sm" />
-                <Input label="Country" name="country" value={shippingAddress.country} onChange={handleAddressChange} className="text-sm" />
+                <Input
+                  label="Full Name *"
+                  name="fullName"
+                  value={shippingAddress.fullName}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="Phone Number *"
+                  name="phone"
+                  type="tel"
+                  value={shippingAddress.phone}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="Address Line 1 *"
+                  name="addressLine1"
+                  value={shippingAddress.addressLine1}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="Address Line 2 (Optional)"
+                  name="addressLine2"
+                  value={shippingAddress.addressLine2}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                />
+                <Input
+                  label="City *"
+                  name="city"
+                  value={shippingAddress.city}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="State/Province *"
+                  name="state"
+                  value={shippingAddress.state}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="Zip/Postal Code *"
+                  name="zipCode"
+                  value={shippingAddress.zipCode}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
+                <Input
+                  label="Country *"
+                  name="country"
+                  value={shippingAddress.country}
+                  onChange={handleAddressChange}
+                  className="text-sm"
+                  required
+                />
               </form>
             </Card>
 
@@ -66,43 +310,75 @@ const CheckoutPage: React.FC = () => {
                   <input
                     type="radio"
                     name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === 'cod'}
+                    onChange={handlePaymentMethodChange}
+                    className="payment-radio"
+                  />
+                  <span className="ml-2">Cash on Delivery (COD)</span>
+                </label>
+
+                <label className="payment-option-label">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
                     value="credit-card"
                     checked={paymentMethod === 'credit-card'}
                     onChange={handlePaymentMethodChange}
                     className="payment-radio"
                   />
-                  <span className="ml-2">Credit Card</span>
+                  <span className="ml-2">Credit/Debit Card</span>
                 </label>
                 {paymentMethod === 'credit-card' && (
                   <div className="payment-card-details">
-                    <Input label="Card Number" name="cardNumber" placeholder="**** **** **** ****" className="text-sm" />
-                    <Input label="Card Holder Name" name="cardHolderName" className="text-sm" />
-                    <Input label="Expiry Date" name="expiryDate" placeholder="MM/YY" className="text-sm" />
-                    <Input label="CVV" name="cvv" placeholder="***" className="text-sm" />
+                    <Input
+                      label="Card Number"
+                      name="cardNumber"
+                      placeholder="**** **** **** ****"
+                      className="text-sm"
+                    />
+                    <Input
+                      label="Card Holder Name"
+                      name="cardHolderName"
+                      className="text-sm"
+                    />
+                    <Input
+                      label="Expiry Date"
+                      name="expiryDate"
+                      placeholder="MM/YY"
+                      className="text-sm"
+                    />
+                    <Input
+                      label="CVV"
+                      name="cvv"
+                      placeholder="***"
+                      className="text-sm"
+                      maxLength={3}
+                    />
                   </div>
                 )}
+
                 <label className="payment-option-label">
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="paypal"
-                    checked={paymentMethod === 'paypal'}
+                    value="upi"
+                    checked={paymentMethod === 'upi'}
                     onChange={handlePaymentMethodChange}
                     className="payment-radio"
                   />
-                  <span className="ml-2">PayPal</span>
+                  <span className="ml-2">UPI</span>
                 </label>
-                <label className="payment-option-label">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="bank-transfer"
-                    checked={paymentMethod === 'bank-transfer'}
-                    onChange={handlePaymentMethodChange}
-                    className="payment-radio"
-                  />
-                  <span className="ml-2">Bank Transfer</span>
-                </label>
+                {paymentMethod === 'upi' && (
+                  <div className="payment-card-details">
+                    <Input
+                      label="UPI ID"
+                      name="upiId"
+                      placeholder="yourname@upi"
+                      className="text-sm"
+                    />
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -113,13 +389,19 @@ const CheckoutPage: React.FC = () => {
               <h2 className="card-title">Order Summary</h2>
               <div className="order-summary-details">
                 {cartItems.length === 0 ? (
-                  <p>Your cart is empty.</p>
+                  <p className="text-gray-500 text-center py-4">Your cart is empty.</p>
                 ) : (
                   cartItems.map((item) => (
                     <div key={item.id} className="order-item">
-                      <img src={item.image_url} alt={item.name} className="w-12 h-12 object-contain rounded-md mr-2" /> {/* Changed to image_url */}
-                      <span>{item.name} (x{item.quantity})</span>
-                      <span>₹{(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-12 h-12 object-contain rounded-md mr-2"
+                      />
+                      <span className="flex-1">{item.name} (x{item.quantity})</span>
+                      <span className="font-semibold">
+                        ₹{(item.price * (item.quantity || 1)).toFixed(2)}
+                      </span>
                     </div>
                   ))
                 )}
@@ -130,16 +412,38 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="order-summary-shipping">
                   <span>Shipping:</span>
-                  <span className="font-semibold">₹{shipping.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
+                  </span>
                 </div>
+                {shipping === 0 && (
+                  <p className="text-xs text-green-600 mt-1">
+                    🎉 You got free shipping!
+                  </p>
+                )}
+                {subtotal > 0 && subtotal < 500 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Add ₹{(500 - subtotal).toFixed(2)} more for free shipping
+                  </p>
+                )}
                 <div className="order-summary-total">
                   <span>Total:</span>
                   <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
-              <Button variant="primary" className="place-order-button" onClick={handlePlaceOrder}>
-                Place Order
+              <Button
+                variant="primary"
+                className="place-order-button"
+                onClick={handlePlaceOrder}
+                disabled={placingOrder || cartItems.length === 0}
+              >
+                {placingOrder ? 'Placing Order...' : 'Place Order'}
               </Button>
+              {paymentMethod === 'cod' && (
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Pay when you receive your order
+                </p>
+              )}
             </Card>
           </div>
         </div>

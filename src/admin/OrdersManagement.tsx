@@ -35,25 +35,25 @@ const OrdersManagement: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
   const fetchOrders = async () => {
-    setLoading(true);
+    setIsLoading(true);
     const { data, error } = await supabase.from('orders').select('*'); // Assuming 'orders' table
     if (error) {
       console.error('Error fetching orders:', error);
-      setError('Failed to fetch orders.');
+      setErrorMessage('Failed to fetch orders.');
       setOrders([]);
     } else {
       setOrders(data as Order[]);
-      setError(null);
+      setErrorMessage(null);
     }
-    setLoading(false);
+    setIsLoading(false);
   };
 
   const handleViewDetails = (order: Order) => {
@@ -74,10 +74,10 @@ const OrdersManagement: React.FC = () => {
 
     if (error) {
       console.error('Error updating order status:', error);
-      setError('Failed to update order status.');
+      setErrorMessage('Failed to update order status.');
     } else {
       fetchOrders(); // Re-fetch orders to get the updated list
-      setError(null);
+      setErrorMessage(null);
     }
   };
 
@@ -103,7 +103,26 @@ const OrdersManagement: React.FC = () => {
       <main className="flex-grow container mx-auto p-4">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Orders Management</h1>
 
-        {orders.length === 0 ? (
+        {errorMessage && (
+          <Card className="p-6 bg-red-50 mb-4">
+            <div className="text-red-600 text-center">
+              <p className="text-lg font-medium">{errorMessage}</p>
+              <Button 
+                variant="secondary" 
+                className="mt-4"
+                onClick={fetchOrders}
+              >
+                Retry Loading
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : orders.length === 0 ? (
           <EmptyState message="No orders found." />
         ) : (
           <Card className="p-6">

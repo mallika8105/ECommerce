@@ -125,8 +125,8 @@ const AdminDashboardHome: React.FC = () => {
       const processedTopCustomers = processTopCustomers(topCustomersData);
       setWeeklyTopCustomers(processedTopCustomers);
 
-    } catch (err: any) {
-      console.error('Error fetching dashboard data:', err.message);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data.');
     } finally {
       setLoading(false);
@@ -134,7 +134,7 @@ const AdminDashboardHome: React.FC = () => {
   };
 
   // Helper functions to process data (implement these based on your data structure)
-  const processChartData = (orders: any[], users: any[]) => {
+  const processChartData = (_orders: Array<{ created_at: string; total: number }>, _users: Array<{ created_at: string }>) => {
     // This is a simplified example. You'd aggregate sales and new users by day/week.
     return [
       { name: 'Day 1', order: 100, incomeGrowth: 50 },
@@ -145,7 +145,7 @@ const AdminDashboardHome: React.FC = () => {
     ];
   };
 
-  const processMostSellingProducts = (productSales: any[]) => {
+  const processMostSellingProducts = (_productSales: unknown[]) => {
     // Aggregate sales for each product and sort
     return [
       { image: 'https://via.placeholder.com/40', name: 'Product A', id: '1', sales: '150' },
@@ -154,8 +154,8 @@ const AdminDashboardHome: React.FC = () => {
     ];
   };
 
-  const processRecentOrders = (orders: any[]) => {
-    return orders.map((order: any) => ({
+  const processRecentOrders = (orders: Array<{ id: string; customer_name: string; created_at: string; status: string; total: number; order_items: Array<{ product_name?: string; product_image_url?: string }> }>) => {
+    return orders.map((order) => ({
       productImage: order.order_items[0]?.product_image_url || 'https://via.placeholder.com/32', // Assuming first item's image
       productName: order.order_items[0]?.product_name || 'N/A',
       customer: order.customer_name,
@@ -166,7 +166,7 @@ const AdminDashboardHome: React.FC = () => {
     }));
   };
 
-  const processTopCustomers = (customers: any[]) => {
+  const processTopCustomers = (_customers: unknown[]) => {
     // Aggregate orders by customer
     return [
       { avatar: 'https://via.placeholder.com/40', name: 'Customer X', orders: 10 },
