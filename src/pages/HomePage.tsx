@@ -1,11 +1,13 @@
-import React from 'react'; // Removed useState as it's not used
+import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
-import { FeaturedProductsSection } from '../components/FeaturedProductsSection'; // Import the new component
-import BestsellerCarousel from '../user/components/BestsellerCarousel'; // 
-import './HomePage.css'; // Import the custom CSS file
-import Hero from './Hero'; // Import the new Hero component
+import { FeaturedProductsSection } from '../components/FeaturedProductsSection';
+import BestsellerCarousel from '../user/components/BestsellerCarousel';
+import { supabase } from '../supabaseClient';
+import SkeletonCard from '../components/SkeletonCard';
+import './HomePage.css';
+import Hero from './Hero';
 
 interface Testimonial {
   id: string;
@@ -14,36 +16,43 @@ interface Testimonial {
   rating: number;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  rating?: number;
+  is_featured?: boolean;
+}
+
 const HomePage: React.FC = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = [
-    {
-      id: '1',
-      name: 'Elegant Women kurta',
-      price: 1399,
-      image_url: 'https://m.media-amazon.com/images/I/71VWnSAvpJL._AC_UL480_FMwebp_QL65_.jpg',
-    },
-    {
-      id: '2',
-      name: 'Wedge Sandals',
-      price: 2999,
-      image_url: 'https://alexnld.com/wp-content/uploads/2019/02/b0d010b6-b667-4a8c-9921-b0365ed776cb.jpg',
-    },
-    {
-      id: '3',
-      name: 'Silver Gold plated Pendant Earings and Chains',
-      price: 4566.45,
-      image_url: 'https://m.media-amazon.com/images/I/61ZspiGgbRL._SX679_.jpg',
-    },
-    {
-      id: '4',
-      name: 'Stylish Men\'s Watch',
-      price: 3499.00,
-      image_url: 'https://m.media-amazon.com/images/I/713cTuz4U7L._SY575_.jpg',
-    },
-  ];
+  // Fetch featured products from database
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_featured', true)
+          .eq('is_active', true)
+          .limit(4);
+
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching featured products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   const testimonials: Testimonial[] = [
     {
@@ -112,11 +121,42 @@ const HomePage: React.FC = () => {
         <Hero />
 
         {/* Featured Products Section */}
-        <FeaturedProductsSection
-          products={products}
-          onAddToCart={addToCart}
-          onProductClick={(productId) => navigate(`/product/${productId}`)}
-        />
+        {loading ? (
+          <section className="featured-products-section">
+            <div className="featured-products-container">
+              <div className="featured-products-header">
+                <h2>Featured Products</h2>
+                <p>Discover our handpicked selection of premium items</p>
+              </div>
+              <div className="featured-products-content">
+                <div className="featured-products-left">
+                  <div className="featured-image-container">
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'shimmer 1.5s infinite'
+                    }} />
+                  </div>
+                </div>
+                <div className="featured-products-right">
+                  <div className="featured-products-grid">
+                    {[...Array(4)].map((_, index) => (
+                      <SkeletonCard key={index} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <FeaturedProductsSection
+            products={products}
+            onAddToCart={addToCart}
+            onProductClick={(productId) => navigate(`/product/${productId}`)}
+          />
+        )}
 
         <BestsellerCarousel />
 

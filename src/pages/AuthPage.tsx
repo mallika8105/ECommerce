@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
@@ -31,12 +31,12 @@ const AuthPage: React.FC = () => {
       } else {
         query = query.eq('email', contactValue);
       }
-      const { data, error } = await query.single();
+      const { data } = await query.single();
       return !!data; // Returns true if data exists, false otherwise
-    } catch (error) {
+    } catch (err) {
       // If error is "PGRST116" (no rows found), it means user doesn't exist.
       // For other errors, log and assume user doesn't exist for this check.
-      console.error('Error checking user existence in profiles table:', error);
+      console.error('Error checking user existence in profiles table:', err);
       return false;
     }
   };

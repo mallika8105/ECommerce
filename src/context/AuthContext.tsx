@@ -1,20 +1,25 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import type { User } from '@supabase/supabase-js'; // Keep User type for now, might need to define a custom User type later
-import { supabase } from '../supabaseClient'; // Import supabase client
-import type { Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import type { User } from "@supabase/supabase-js"; // Keep User type for now, might need to define a custom User type later
+import { supabase } from "../supabaseClient"; // Import supabase client
+import type { Session } from "@supabase/supabase-js";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ user: User | null; error: Error | null }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ user: User | null; error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,26 +30,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const initializeAuth = async () => {
       try {
         // First check for mock admin session
-        const adminLoggedIn = localStorage.getItem('adminLoggedIn');
-        if (adminLoggedIn === 'true') {
+        const adminLoggedIn = localStorage.getItem("adminLoggedIn");
+        if (adminLoggedIn === "true") {
           const mockUser: User = {
-            id: 'mock-admin-id',
-            email: 'admin@example.com',
-            app_metadata: { provider: 'email' },
-            aud: 'authenticated',
+            id: "mock-admin-id",
+            email: "admin@example.com",
+            app_metadata: { provider: "email" },
+            aud: "authenticated",
             created_at: new Date().toISOString(),
-            user_metadata: { role: 'admin' },
+            user_metadata: { role: "admin" },
           };
-          
+
           const mockSession: Session = {
-            access_token: 'mock-token',
-            token_type: 'bearer',
+            access_token: "mock-token",
+            token_type: "bearer",
             expires_in: 3600,
-            refresh_token: 'mock-refresh-token',
+            refresh_token: "mock-refresh-token",
             user: mockUser,
             expires_at: Date.now() + 3600000,
           };
-          
+
           setUser(mockUser);
           setSession(mockSession);
           setIsAdmin(true);
@@ -53,32 +58,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         // Check for existing Supabase session
-        const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
-        
+        const {
+          data: { session: existingSession },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
         if (sessionError) throw sessionError;
 
         if (existingSession?.user) {
           setSession(existingSession);
           setUser(existingSession.user);
-          
+
           // Check for admin status in user metadata first
-          if (existingSession.user.user_metadata?.role === 'admin') {
+          if (existingSession.user.user_metadata?.role === "admin") {
             setIsAdmin(true);
           } else {
             // Fallback to profiles table check
             const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', existingSession.user.id)
+              .from("profiles")
+              .select("role")
+              .eq("id", existingSession.user.id)
               .single();
-            
-            setIsAdmin(profile?.role?.toLowerCase() === 'admin');
+
+            setIsAdmin(profile?.role?.toLowerCase() === "admin");
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error("Auth initialization error:", error);
         // Only clear everything if there's no admin session
-        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+        if (localStorage.getItem("adminLoggedIn") !== "true") {
           setUser(null);
           setSession(null);
           setIsAdmin(false);
@@ -89,39 +97,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        // Don't override mock admin session
-        if (localStorage.getItem('adminLoggedIn') === 'true') {
-          return;
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log(
+        "AuthContext: onAuthStateChange event:",
+        event,
+        "hasSession:",
+        !!currentSession
+      );
 
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          // Check user metadata first
-          if (currentSession.user.user_metadata?.role === 'admin') {
-            setIsAdmin(true);
-          } else {
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', currentSession.user.id)
-                .single();
-              
-              setIsAdmin(profile?.role?.toLowerCase() === 'admin');
-            } catch (error) {
-              console.error('Error checking admin status:', error);
-              setIsAdmin(false);
-            }
-          }
-        } else {
-          setIsAdmin(false);
-        }
+      // Don't override mock admin session
+      if (localStorage.getItem("adminLoggedIn") === "true") {
+        console.log("AuthContext: Skipping - mock admin session active");
+        return;
       }
-    );
+
+      // Update session and user immediately (synchronously)
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      // Set admin status from user metadata only (no async DB call)
+      if (currentSession?.user?.user_metadata?.role === "admin") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+
+      // ALWAYS set loading to false immediately
+      console.log("AuthContext: Setting loading to false");
+      setLoading(false);
+    });
 
     // Initialize
     initializeAuth();
@@ -135,19 +141,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
         .single();
 
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error("Error fetching user role:", error);
         setIsAdmin(false);
         return;
       }
-      setIsAdmin(data?.role?.toLowerCase() === 'admin');
+      setIsAdmin(data?.role?.toLowerCase() === "admin");
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error("Error fetching user role:", error);
       setIsAdmin(false);
     } finally {
       // Ensure loading is handled if this is part of an initial load, though useEffect's finally should cover it.
@@ -159,31 +165,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       // Handle mock admin authentication
-      if (email === 'admin@example.com' && password === 'Admin@123') {
+      if (email === "admin@example.com" && password === "Admin@123") {
         const mockUser: User = {
-          id: 'mock-admin-id',
-          email: 'admin@example.com',
-          app_metadata: { provider: 'email' },
-          aud: 'authenticated',
+          id: "mock-admin-id",
+          email: "admin@example.com",
+          app_metadata: { provider: "email" },
+          aud: "authenticated",
           created_at: new Date().toISOString(),
-          user_metadata: { role: 'admin' },
+          user_metadata: { role: "admin" },
         };
-        
+
         // Set mock session with 24-hour expiry
-        const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours from now
         const mockSession: Session = {
-          access_token: 'mock-token',
-          token_type: 'bearer',
+          access_token: "mock-token",
+          token_type: "bearer",
           expires_in: 24 * 60 * 60, // 24 hours in seconds
-          refresh_token: 'mock-refresh-token',
+          refresh_token: "mock-refresh-token",
           user: mockUser,
           expires_at: expiresAt,
         };
-        
+
         // Store session details
-        localStorage.setItem('adminLoggedIn', 'true');
-        localStorage.setItem('adminSessionExpiresAt', expiresAt.toString());
-        
+        localStorage.setItem("adminLoggedIn", "true");
+        localStorage.setItem("adminSessionExpiresAt", expiresAt.toString());
+
         setUser(mockUser);
         setSession(mockSession);
         setIsAdmin(true);
@@ -191,7 +197,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // Regular user authentication
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         throw new Error(error.message);
@@ -205,11 +214,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return { user: data.user, error: null };
     } catch (err: any) {
-      console.error('Login error:', err.message);
+      console.error("Login error:", err.message);
       setUser(null);
       setSession(null);
       setIsAdmin(false);
-      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem("adminLoggedIn");
       return { user: null, error: new Error(err.message) };
     } finally {
       setLoading(false);
@@ -220,9 +229,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       // Clear mock admin session if it exists
-      if (localStorage.getItem('adminLoggedIn')) {
-        localStorage.removeItem('adminLoggedIn');
-        localStorage.removeItem('adminSessionExpiresAt');
+      if (localStorage.getItem("adminLoggedIn")) {
+        localStorage.removeItem("adminLoggedIn");
+        localStorage.removeItem("adminSessionExpiresAt");
         setUser(null);
         setSession(null);
         setIsAdmin(false);
@@ -240,7 +249,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAdmin(false);
       return { error: null };
     } catch (err: any) {
-      console.error('Logout error:', err.message);
+      console.error("Logout error:", err.message);
       return { error: new Error(err.message) };
     } finally {
       setLoading(false);
@@ -248,7 +257,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, isAdmin, loading, signIn, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -257,7 +268,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

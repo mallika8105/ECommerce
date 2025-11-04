@@ -11,9 +11,9 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmation from './pages/OrderConfirmation';
 import ProfilePage from './pages/ProfilePage';
+import AccountPage from './pages/AccountPage';
 import MyOrders from './pages/MyOrders';
 import WishlistPage from './pages/WishlistPage';
-import DashboardPage from './pages/DashboardPage'; // Import the new DashboardPage
 import CollectionsPage from './pages/CollectionsPage'; // Import CollectionsPage
 import CategoryPage from './pages/CategoryPage'; // Import CategoryPage
 import BestsellerPage from './pages/BestsellerPage'; // Import BestsellerPage
@@ -86,6 +86,7 @@ const AppContent: React.FC = () => {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/collections" element={<CollectionsPage />} />

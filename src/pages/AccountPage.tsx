@@ -11,6 +11,10 @@ interface Profile {
   name: string | null;
   email: string | null;
   phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
 }
 
 const AccountPage: React.FC = () => {
@@ -21,29 +25,38 @@ const AccountPage: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editPincode, setEditPincode] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true; // Prevent updates after unmount
+
     const fetchProfile = async () => {
-      console.log('AccountPage: fetchProfile triggered.');
+      console.log('AccountPage: fetchProfile triggered. loading:', loading, 'user:', !!user, 'isMounted:', isMounted);
       // Only proceed if AuthContext has finished loading AND a user is available
-      if (loading || !user) {
-        console.log('AccountPage: Skipping fetchProfile - AuthContext still loading or user not available.');
+      if (loading || !user || !isMounted) {
+        console.log('AccountPage: Skipping fetchProfile - loading:', loading, 'user:', !!user, 'isMounted:', isMounted);
         return;
       }
+
+      setIsLoadingProfile(true);
 
       // Initialize edit states with current user data
       setEditName(user.user_metadata?.name || '');
       setEditEmail(user.email || '');
-      setEditPhone(user.phone || ''); // Supabase user object might have phone directly
+      setEditPhone(user.phone || '');
 
       // Fetch additional profile data from 'profiles' table
       try {
         console.log('AccountPage: fetchProfile: Querying profiles table for user ID:', user.id);
         const { data, error } = await supabase
           .from('profiles')
-          .select('name, email, phone') // Select relevant fields
+          .select('name, email, phone, address, city, state, pincode') // Select all fields
           .eq('id', user.id)
           .single();
 
@@ -60,6 +73,10 @@ const AccountPage: React.FC = () => {
               name: user.user_metadata?.name || '',
               email: user.email || '',
               phone: user.phone || '',
+              address: '',
+              city: '',
+              state: '',
+              pincode: '',
             }, { onConflict: 'id' });
 
           if (createError) {
@@ -70,7 +87,7 @@ const AccountPage: React.FC = () => {
             // Successfully created, now fetch it again
             const { data: newData, error: newFetchError } = await supabase
               .from('profiles')
-              .select('name, email, phone')
+              .select('name, email, phone, address, city, state, pincode')
               .eq('id', user.id)
               .single();
 
@@ -82,28 +99,46 @@ const AccountPage: React.FC = () => {
               setEditName(newData.name || user.user_metadata?.name || '');
               setEditEmail(newData.email || user.email || '');
               setEditPhone(newData.phone || user.phone || '');
+              setEditAddress(newData.address || '');
+              setEditCity(newData.city || '');
+              setEditState(newData.state || '');
+              setEditPincode(newData.pincode || '');
               setUpdateMessage('Profile created and fetched successfully!');
               console.log('AccountPage: fetchProfile: Re-fetched profile data:', newData);
             }
           }
         } else if (data) {
-          setProfile(data as Profile);
-          setEditName(data.name || user.user_metadata?.name || '');
-          setEditEmail(data.email || user.email || '');
-          setEditPhone(data.phone || user.phone || '');
-          console.log('AccountPage: fetchProfile: Existing profile data found:', data);
+          if (isMounted) {
+            setProfile(data as Profile);
+            setEditName(data.name || user.user_metadata?.name || '');
+            setEditEmail(data.email || user.email || '');
+            setEditPhone(data.phone || user.phone || '');
+            setEditAddress(data.address || '');
+            setEditCity(data.city || '');
+            setEditState(data.state || '');
+            setEditPincode(data.pincode || '');
+            console.log('AccountPage: fetchProfile: Existing profile data found:', data);
+          }
         }
       } catch (err: any) {
         console.error('AccountPage: fetchProfile: Unexpected error:', err);
-        setUpdateMessage(`Unexpected error fetching profile: ${err.message}`);
+        if (isMounted) {
+          setUpdateMessage(`Unexpected error fetching profile: ${err.message}`);
+        }
       } finally {
-        console.log('AccountPage: fetchProfile completed. Final Profile state:', profile);
-        console.log('AccountPage: fetchProfile completed. Current User state:', user);
+        console.log('AccountPage: fetchProfile completed.');
+        if (isMounted) {
+          setIsLoadingProfile(false);
+        }
       }
     };
 
     fetchProfile();
-  }, [user, loading, session]); // Re-fetch if user, loading, or session changes
+
+    return () => {
+      isMounted = false; // Cleanup on unmount
+    };
+  }, [user, loading]); // Removed 'session' to prevent infinite loop
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,9 +177,7 @@ const AccountPage: React.FC = () => {
         if (authError) throw authError;
       }
 
-      // Always update the 'profiles' table for name, email, and phone
-
-      // Also update the 'profiles' table
+      // Always update the 'profiles' table for all fields
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
@@ -152,6 +185,10 @@ const AccountPage: React.FC = () => {
           name: editName,
           email: editEmail,
           phone: editPhone,
+          address: editAddress,
+          city: editCity,
+          state: editState,
+          pincode: editPincode,
         }, { onConflict: 'id' }); // Upsert to create or update
 
       if (profileError) throw profileError;
@@ -171,8 +208,22 @@ const AccountPage: React.FC = () => {
     }
   };
 
+  console.log('AccountPage render - loading:', loading, 'user:', !!user);
+  
   if (loading) {
-    return <p>Loading account details...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading account details...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>No user found. Redirecting...</p>
+      </div>
+    );
   }
 
   return (
@@ -181,39 +232,87 @@ const AccountPage: React.FC = () => {
 
       <Card className="mb-6 p-6">
         <h2 className="text-2xl font-semibold mb-4">Profile Information</h2>
-        <form onSubmit={handleUpdateProfile} className="space-y-4">
-          <Input
-            label="Full Name"
-            type="text"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            required
-            disabled={isUpdating}
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={editEmail}
-            onChange={(e) => setEditEmail(e.target.value)}
-            required
-            disabled={isUpdating}
-          />
-          <Input
-            label="Phone Number"
-            type="tel"
-            value={editPhone}
-            onChange={(e) => setEditPhone(e.target.value)}
-            disabled={isUpdating}
-          />
-          <Button type="submit" variant="primary" disabled={isUpdating}>
-            {isUpdating ? 'Updating...' : 'Update Profile'}
-          </Button>
-          {updateMessage && (
-            <p className={`mt-2 text-sm ${updateMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
-              {updateMessage}
-            </p>
-          )}
-        </form>
+        {isLoadingProfile ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-600">Loading profile data...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <Input
+              label="Full Name"
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+              disabled={isUpdating}
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              required
+              disabled={isUpdating}
+            />
+            <Input
+              label="Phone Number"
+              type="tel"
+              value={editPhone}
+              onChange={(e) => setEditPhone(e.target.value)}
+              disabled={isUpdating}
+            />
+
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-lg font-semibold mb-3 text-gray-700">Shipping Address</h3>
+              <div className="space-y-4">
+                <Input
+                  label="Street Address"
+                  type="text"
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  placeholder="123 Main Street, Apt 4B"
+                  disabled={isUpdating}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="City"
+                    type="text"
+                    value={editCity}
+                    onChange={(e) => setEditCity(e.target.value)}
+                    placeholder="Mumbai"
+                    disabled={isUpdating}
+                  />
+                  <Input
+                    label="State"
+                    type="text"
+                    value={editState}
+                    onChange={(e) => setEditState(e.target.value)}
+                    placeholder="Maharashtra"
+                    disabled={isUpdating}
+                  />
+                </div>
+                <Input
+                  label="PIN Code"
+                  type="text"
+                  value={editPincode}
+                  onChange={(e) => setEditPincode(e.target.value)}
+                  placeholder="400001"
+                  maxLength={6}
+                  disabled={isUpdating}
+                />
+              </div>
+            </div>
+
+            <Button type="submit" variant="primary" disabled={isUpdating} className="mt-6">
+              {isUpdating ? 'Updating...' : 'Update Profile'}
+            </Button>
+            {updateMessage && (
+              <p className={`mt-2 text-sm ${updateMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                {updateMessage}
+              </p>
+            )}
+          </form>
+        )}
       </Card>
 
       <Card className="p-6">

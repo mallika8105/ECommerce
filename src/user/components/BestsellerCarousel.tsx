@@ -1,81 +1,68 @@
-// BestsellerCarousel.jsx
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, ShoppingCart } from 'lucide-react';
-import './BestsellerCarousel.css'; // Import the CSS file
+// BestsellerCarousel.tsx
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Star, ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
+import { useCart } from "../../context/CartContext";
+import SkeletonCard from "../../components/SkeletonCard";
+import "./BestsellerCarousel.css";
 
 const DESKTOP_ITEMS_PER_VIEW = 5;
-const products = [
-  // ... (Your existing products array remains the same)
-  {
-    id: 1,
-    name: "Premium Wireless Headphones",
-    price: 10999,
-    originalPrice: 16999,
-    rating: 4.8,
-    reviews: 2847,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
-    badge: "Bestseller"
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    price: 20999,
-    originalPrice: 29999,
-    rating: 4.9,
-    reviews: 1923,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-    badge: "Trending"
-  },
-  {
-    id: 3,
-    name: "Leather Crossbody Bag",
-    price: 7499,
-    originalPrice: 12999,
-    rating: 4.7,
-    reviews: 3421,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80",
-    badge: "Hot"
-  },
-  {
-    id: 4,
-    name: "Minimalist Desk Lamp",
-    price: 4999,
-    originalPrice: 8999,
-    rating: 4.6,
-    reviews: 1542,
-    image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-    badge: "New"
-  },
-  {
-    id: 5,
-    name: "Ceramic Coffee Mug Set",
-    price: 2999,
-    originalPrice: 4999,
-    rating: 4.9,
-    reviews: 4231,
-    image: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=500&q=80",
-    badge: "Popular"
-  }
-];
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  rating?: number;
+  is_bestseller?: boolean;
+}
 
 const viewBreakpoints = {
-  mobile: 1, // < 768px
-  tablet: 2, // 768px to < 1024px
-  desktop: DESKTOP_ITEMS_PER_VIEW // >= 1024px
+  mobile: 1,
+  tablet: 2,
+  desktop: DESKTOP_ITEMS_PER_VIEW,
 };
 
 export default function BestsellerCarousel() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(DESKTOP_ITEMS_PER_VIEW);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  // Fetch bestselling products
+  useEffect(() => {
+    const fetchBestsellers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_bestseller', true)
+          .eq('is_active', true)
+          .limit(10);
+
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching bestsellers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBestsellers();
+  }, []);
 
   const calculateItemsPerView = () => {
-    if (typeof window === 'undefined') return viewBreakpoints.desktop;
-    
+    if (typeof window === "undefined") return viewBreakpoints.desktop;
+
     if (window.innerWidth < 768) return viewBreakpoints.mobile;
     if (window.innerWidth < 1024) return viewBreakpoints.tablet;
     return viewBreakpoints.desktop;
   };
-  
+
   useEffect(() => {
     setItemsPerView(calculateItemsPerView());
 
@@ -84,12 +71,12 @@ export default function BestsellerCarousel() {
       if (newItemsPerView !== itemsPerView) {
         setItemsPerView(newItemsPerView);
         // Reset to first slide if view size changes
-        setCurrentIndex(0); 
+        setCurrentIndex(0);
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [itemsPerView]);
 
   const nextSlide = () => {
@@ -105,10 +92,58 @@ export default function BestsellerCarousel() {
     }
   };
 
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image_url: product.image_url,
+      quantity: 1
+    });
+  };
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="carousel-container">
+        <div className="carousel-header">
+          <h2>Bestsellers</h2>
+          <p>Discover our most loved products</p>
+        </div>
+        <div className="carousel-wrapper">
+          <div className="products-track-window">
+            <div className="products-track">
+              {[...Array(5)].map((_, index) => (
+                <div
+                  key={index}
+                  className={`product-card item-view-${itemsPerView}`}
+                >
+                  <SkeletonCard />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="carousel-container">
+        <div className="carousel-header">
+          <h2>Bestsellers</h2>
+          <p>No bestselling products available</p>
+        </div>
+      </div>
+    );
+  }
+
   const totalSlides = Math.max(0, products.length - itemsPerView + 1);
-  
-  // Translation for moving one card slot at a time
-  const finalTranslateX = currentIndex * (100 / itemsPerView); 
+  const finalTranslateX = currentIndex * (100 / itemsPerView);
 
   return (
     <div className="carousel-container">
@@ -151,49 +186,60 @@ export default function BestsellerCarousel() {
                 className={`product-card item-view-${itemsPerView}`}
               >
                 {/* Image Container */}
-                <div className="product-image-container">
+                <div 
+                  className="product-image-container"
+                  onClick={() => handleProductClick(product.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <img
-                    src={product.image}
+                    src={product.image_url}
                     alt={product.name}
                     className="product-image"
                   />
-                  <span className="product-badge">
-                    {product.badge}
-                  </span>
-                  <button className="add-to-cart-quick">
+                  {product.is_bestseller && (
+                    <span className="product-badge">Bestseller</span>
+                  )}
+                  <button 
+                    className="add-to-cart-quick"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart(product);
+                    }}
+                  >
                     <ShoppingCart className="icon" />
                   </button>
                 </div>
 
                 {/* Product Info */}
                 <div className="product-info">
-                  <h3 className="product-name">
+                  <h3 
+                    className="product-name"
+                    onClick={() => handleProductClick(product.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {product.name}
                   </h3>
 
                   {/* Rating */}
-                  <div className="product-rating">
-                    <Star className="star-icon" />
-                    <span className="rating-value">
-                      {product.rating}
-                    </span>
-                    <span className="review-count">
-                      ({product.reviews})
-                    </span>
-                  </div>
+                  {product.rating && (
+                    <div className="product-rating">
+                      <Star className="star-icon" />
+                      <span className="rating-value">{product.rating}</span>
+                    </div>
+                  )}
 
                   {/* Price */}
                   <div className="product-price">
                     <span className="current-price">
-                      ₹ {product.price.toLocaleString('en-IN')}
-                    </span>
-                    <span className="original-price">
-                      ₹ {product.originalPrice.toLocaleString('en-IN')}
+                      ₹{product.price.toLocaleString("en-IN")}
                     </span>
                   </div>
 
                   {/* Add to Cart Button */}
-                  <button className="add-to-cart-btn">
+                  <button 
+                    className="add-to-cart-btn"
+                    onClick={() => handleAddToCart(product)}
+                  >
                     <ShoppingCart className="icon-sm" />
                     Add to Cart
                   </button>
@@ -209,7 +255,7 @@ export default function BestsellerCarousel() {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`dot ${idx === currentIndex ? 'active' : ''}`}
+              className={`dot ${idx === currentIndex ? "active" : ""}`}
               aria-label={`Go to slide ${idx + 1}`}
             />
           ))}
