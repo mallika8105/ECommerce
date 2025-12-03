@@ -37,7 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
             {product.name}
           </a>
         </h3>
-        <p className="product-card-price">₹ {product.price.toLocaleString('en-IN')}</p>
+        <p className="product-card-price">₹{product.price.toLocaleString('en-IN')}</p>
         <div className="product-card-rating">
           {'⭐'.repeat(Math.floor(product.rating))} ({product.reviews} reviews)
         </div>

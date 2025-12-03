@@ -28,7 +28,7 @@ const SubCategoriesPage: React.FC = () => {
           .from('subcategories')
           .select('*')
           .eq('category_id', categoryId)
-          .order('name', { ascending: true });
+          .order('display_order', { ascending: true });
 
         if (error) throw error;
         setSubcategories(data || []);

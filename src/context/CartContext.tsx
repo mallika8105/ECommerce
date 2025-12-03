@@ -5,6 +5,7 @@ interface Product {
   name: string;
   price: number;
   image_url: string; // Changed to match database column name
+  product_code?: string; // Add product_code for order items
   quantity?: number; // Made quantity optional
 }
 

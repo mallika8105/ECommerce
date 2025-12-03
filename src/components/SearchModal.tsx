@@ -9,6 +9,7 @@ interface Product {
   name: string;
   price: number;
   image_url: string;
+  product_code?: string;
   category_id: string;
   subcategory_id: string;
   stock: number;
@@ -108,6 +109,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
       name: product.name,
       price: product.price,
       image_url: product.image_url,
+      product_code: product.product_code,
       quantity: 1,
     });
   };

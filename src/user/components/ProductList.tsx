@@ -143,7 +143,7 @@ const ProductListPage: React.FC<ProductListProps> = ({ products, onAddToCart }) 
           <div key={product.id} className="product-card">
             <img src={product.imageUrl} alt={product.name} />
             <h3>{product.name}</h3>
-            <p>₹ {product.price.toLocaleString('en-IN')}</p>
+            <p>₹{product.price.toLocaleString('en-IN')}</p>
             <p className="product-category">{product.category}</p>
             <button onClick={() => onAddToCart(product)}>Add to Cart</button>
           </div>

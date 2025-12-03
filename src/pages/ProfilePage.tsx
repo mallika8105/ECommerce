@@ -33,7 +33,7 @@ const ProfilePage: React.FC = () => {
     city: '',
     state: '',
     zipCode: '',
-    country: 'India',
+    country: '',
   });
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -85,7 +85,7 @@ const ProfilePage: React.FC = () => {
             city: addressData?.city || '',
             state: addressData?.state || '',
             zipCode: addressData?.zipCode || '',
-            country: addressData?.country || 'India',
+            country: addressData?.country || '',
           });
         }
       } catch (err: any) {

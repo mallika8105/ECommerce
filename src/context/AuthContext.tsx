@@ -12,6 +12,7 @@ interface AuthContextType {
     email: string,
     password: string
   ) => Promise<{ user: User | null; error: Error | null }>;
+  signInWithGoogle: () => Promise<{ user: User | null; error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
 }
 
@@ -31,9 +32,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       try {
         // First check for mock admin session
         const adminLoggedIn = localStorage.getItem("adminLoggedIn");
+        const sessionExpiresAt = localStorage.getItem("adminSessionExpiresAt");
+        
         if (adminLoggedIn === "true") {
+          // Check if session has expired
+          if (sessionExpiresAt && Date.now() > parseInt(sessionExpiresAt)) {
+            // Session expired, clear it
+            localStorage.removeItem("adminLoggedIn");
+            localStorage.removeItem("adminSessionExpiresAt");
+            setUser(null);
+            setSession(null);
+            setIsAdmin(false);
+            setLoading(false);
+            return;
+          }
+
           const mockUser: User = {
-            id: "mock-admin-id",
+            id: "a0000000-0000-4000-8000-000000000001", // Replaced with a valid UUID format
             email: "admin@example.com",
             app_metadata: { provider: "email" },
             aud: "authenticated",
@@ -47,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             expires_in: 3600,
             refresh_token: "mock-refresh-token",
             user: mockUser,
-            expires_at: Date.now() + 3600000,
+            expires_at: parseInt(sessionExpiresAt || "0"),
           };
 
           setUser(mockUser);
@@ -256,9 +271,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Supabase redirects, so user/session will be updated by onAuthStateChange listener
+      return { user: null, error: null };
+    } catch (err: any) {
+      console.error("Google login error:", err.message);
+      return { user: null, error: new Error(err.message) };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, session, isAdmin, loading, signIn, signOut }}
+      value={{ user, session, isAdmin, loading, signIn, signInWithGoogle, signOut }}
     >
       {children}
     </AuthContext.Provider>

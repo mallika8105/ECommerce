@@ -15,13 +15,13 @@ const CheckoutPage: React.FC = () => {
   
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
+    phone: '',
     addressLine1: '',
     addressLine2: '',
     city: '',
     state: '',
     zipCode: '',
     country: '',
-    phone: '',
   });
   
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -70,12 +70,34 @@ const CheckoutPage: React.FC = () => {
           let addressData = {};
           if (data.address) {
             if (typeof data.address === 'string') {
-              try {
-                addressData = JSON.parse(data.address);
-                console.log('Parsed address:', addressData);
-              } catch (e) {
-                console.error('JSON parse error:', e);
-                addressData = {};
+              const addressString = data.address.trim();
+              
+              // Check if the string looks like JSON (starts with { or [)
+              if (addressString.startsWith('{') || addressString.startsWith('[') || 
+                  (addressString.startsWith('"') && addressString.endsWith('"'))) {
+                try {
+                  // Handle potential double-encoded JSON
+                  let jsonString = addressString;
+                  
+                  // Remove outer quotes if they exist (double-encoded case)
+                  if (jsonString.startsWith('"') && jsonString.endsWith('"')) {
+                    jsonString = jsonString.slice(1, -1);
+                    // Unescape any escaped quotes
+                    jsonString = jsonString.replace(/\\"/g, '"');
+                  }
+                  
+                  addressData = JSON.parse(jsonString);
+                  console.log('Parsed address:', addressData);
+                } catch (e) {
+                  console.error('JSON parse error:', e);
+                  console.error('Address value:', data.address);
+                  // If parsing fails, treat as plain text address
+                  addressData = { addressLine1: addressString };
+                }
+              } else {
+                // If it doesn't look like JSON, treat it as plain text address
+                console.log('Plain text address detected:', addressString);
+                addressData = { addressLine1: addressString };
               }
             } else if (typeof data.address === 'object') {
               addressData = data.address;
@@ -90,7 +112,7 @@ const CheckoutPage: React.FC = () => {
             city: (addressData as any)?.city || '',
             state: (addressData as any)?.state || '',
             zipCode: (addressData as any)?.zipCode || '',
-            country: (addressData as any)?.country || 'India',
+            country: (addressData as any)?.country || '',
           };
 
           console.log('Setting address to:', newAddress);
@@ -163,13 +185,32 @@ const CheckoutPage: React.FC = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        quantity: item.quantity || 1,
-        price: item.price,
-      }));
+      // Create order items - fetch fresh product data to ensure we have all required fields
+      const orderItemsPromises = cartItems.map(async (item) => {
+        // Fetch the latest product data to ensure we have product_name
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('name, product_code, image_url')
+          .eq('id', item.id)
+          .single();
+
+        if (productError) {
+          console.error('Error fetching product data for order item:', productError);
+        }
+
+        return {
+          order_id: order.id,
+          product_id: item.id,
+          product_name: productData?.name || item.name || 'Unknown Product',
+          product_code: productData?.product_code || item.product_code || 'N/A',
+          product_image_url: productData?.image_url || item.image_url || '',
+          quantity: item.quantity || 1,
+          price: item.price,
+          subtotal: item.price * (item.quantity || 1),
+        };
+      });
+
+      const orderItems = await Promise.all(orderItemsPromises);
 
       const { error: itemsError } = await supabase
         .from('order_items')

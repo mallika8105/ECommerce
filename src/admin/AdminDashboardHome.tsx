@@ -148,15 +148,15 @@ const AdminDashboardHome: React.FC = () => {
   const processMostSellingProducts = (_productSales: unknown[]) => {
     // Aggregate sales for each product and sort
     return [
-      { image: 'https://via.placeholder.com/40', name: 'Product A', id: '1', sales: '150' },
-      { image: 'https://via.placeholder.com/40', name: 'Product B', id: '2', sales: '120' },
-      { image: 'https://via.placeholder.com/40', name: 'Product C', id: '3', sales: '90' },
+      { image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23999"%3EA%3C/text%3E%3C/svg%3E', name: 'Product A', id: '1', sales: '150' },
+      { image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23999"%3EB%3C/text%3E%3C/svg%3E', name: 'Product B', id: '2', sales: '120' },
+      { image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23999"%3EC%3C/text%3E%3C/svg%3E', name: 'Product C', id: '3', sales: '90' },
     ];
   };
 
   const processRecentOrders = (orders: Array<{ id: string; customer_name: string; created_at: string; status: string; total: number; order_items: Array<{ product_name?: string; product_image_url?: string }> }>) => {
     return orders.map((order) => ({
-      productImage: order.order_items[0]?.product_image_url || 'https://via.placeholder.com/32', // Assuming first item's image
+      productImage: order.order_items[0]?.product_image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32"%3E%3Crect width="32" height="32" fill="%23ddd"/%3E%3C/svg%3E', // Assuming first item's image
       productName: order.order_items[0]?.product_name || 'N/A',
       customer: order.customer_name,
       orderId: `#${order.id}`,
@@ -169,9 +169,9 @@ const AdminDashboardHome: React.FC = () => {
   const processTopCustomers = (_customers: unknown[]) => {
     // Aggregate orders by customer
     return [
-      { avatar: 'https://via.placeholder.com/40', name: 'Customer X', orders: 10 },
-      { avatar: 'https://via.placeholder.com/40', name: 'Customer Y', orders: 8 },
-      { avatar: 'https://via.placeholder.com/40', name: 'Customer Z', orders: 7 },
+      { avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%23999"%3EX%3C/text%3E%3C/svg%3E', name: 'Customer X', orders: 10 },
+      { avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%23999"%3EY%3C/text%3E%3C/svg%3E', name: 'Customer Y', orders: 8 },
+      { avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%23999"%3EZ%3C/text%3E%3C/svg%3E', name: 'Customer Z', orders: 7 },
     ];
   };
 
@@ -215,7 +215,7 @@ const AdminDashboardHome: React.FC = () => {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard
           title="Ecommerce Revenue"
-          value="₹ 20,50,450" // This should also be dynamic
+          value="₹20,50,450" // This should also be dynamic
           percentage="14.9%"
           percentageColor="text-green-500"
           period=""
@@ -239,11 +239,11 @@ const AdminDashboardHome: React.FC = () => {
         />
         <StatCard
           title="Average Order Value"
-          value="₹ 2,412" // This should also be dynamic
+          value="₹2,412" // This should also be dynamic
           percentage="35.2%"
           percentageColor="text-green-500"
           period=""
-          trendValue="+₹ 754"
+          trendValue="+₹754"
         />
         <StatCard
           title="Conversion rate"

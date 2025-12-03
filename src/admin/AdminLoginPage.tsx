@@ -13,7 +13,7 @@ const AdminLoginPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { signIn, user, isAdmin } = useAuth();
+  const { signIn, signOut, user, isAdmin } = useAuth();
 
   useEffect(() => {
     if (user && isAdmin) {
@@ -23,6 +23,13 @@ const AdminLoginPage: React.FC = () => {
       navigate('/');
     }
   }, [user, isAdmin, navigate]);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    await signOut();
+    setMessage('Logged out successfully');
+    setLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

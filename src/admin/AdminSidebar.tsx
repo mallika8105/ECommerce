@@ -1,9 +1,12 @@
 import React from 'react';
 import { Home, ShoppingBag, Users, Package, BarChart2, LogOut, User, LogIn } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const navItems = [
     { path: "/admin/dashboard", icon: <Home size={20} />, label: "Dashboard" },
@@ -66,7 +69,13 @@ const AdminSidebar: React.FC = () => {
         </div>
       </nav>
       <div className="mt-auto pt-4 border-t border-gray-200">
-        <button className="flex items-center space-x-3 p-3 rounded-lg w-full text-red-500 hover:bg-red-50 transition-colors duration-200">
+        <button 
+          onClick={async () => {
+            await signOut();
+            navigate('/admin/login');
+          }}
+          className="flex items-center space-x-3 p-3 rounded-lg w-full text-red-500 hover:bg-red-50 transition-colors duration-200"
+        >
           <LogOut size={20} />
           <span>Logout</span>
         </button>

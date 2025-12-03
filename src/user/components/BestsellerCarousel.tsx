@@ -14,6 +14,7 @@ interface Product {
   name: string;
   price: number;
   image_url: string;
+  product_code?: string;
   rating?: number;
   is_bestseller?: boolean;
 }
@@ -98,6 +99,7 @@ export default function BestsellerCarousel() {
       name: product.name,
       price: product.price,
       image_url: product.image_url,
+      product_code: product.product_code,
       quantity: 1
     });
   };

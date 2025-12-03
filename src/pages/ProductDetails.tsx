@@ -14,6 +14,7 @@ interface Product {
   description: string;
   price: number;
   image_url: string; // Main image
+  product_code?: string; // Product code for order items
   // Assuming additional images might be stored as a JSON array of strings in the DB
   additional_images?: string[];
   rating?: number;
@@ -72,7 +73,7 @@ const ProductDetails: React.FC = () => {
         if (data) {
           const fetchedProduct: Product = {
             ...data,
-            image_url: data.image_url || 'https://via.placeholder.com/300?text=No+Image',
+            image_url: data.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect width="300" height="300" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E',
             additional_images: data.additional_images || [],
             colors: data.colors || [], // Initialize colors
             size_chart_url: data.size_chart_url || '', // Initialize size_chart_url

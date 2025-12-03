@@ -4,7 +4,7 @@
   position: relative;
   width: 100%;
   margin: 0 0 1.5rem 0;
-  height: 350px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,28 +17,28 @@
 
 @media (min-width: 640px) {
   .hero-section {
-    height: 450px;
+    height: 380px;
     margin-bottom: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
   .hero-section {
-    height: 600px;
+    height: 480px;
     margin-bottom: 2.5rem;
   }
 }
 
 @media (min-width: 1280px) {
   .hero-section {
-    height: 650px;
+    height: 520px;
   }
 }
 
 .hero-image {
-  width: 100%;
+  width: 98%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: opacity 1s ease-in-out;
   filter: grayscale(0%);
 }

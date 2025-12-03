@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Public Pages
@@ -59,18 +59,18 @@ const AppContent: React.FC = () => {
     <>
       <Routes>
         {/* Admin Routes - Outside main layout to avoid header/footer */}
-        <Route path="/admin">
-          <Route index element={<AdminLoginPage />} />
-          <Route path="login" element={<AdminLoginPage />} />
-          <Route element={<ProtectedRoute adminOnly={true} />}>
-            <Route element={<AdminDashboard />}>
-                <Route path="dashboard" element={<AdminDashboardHome />} />
-                <Route path="products" element={<ProductManagement />} />
-                <Route path="categories" element={<CategoryManagement />} />
-                <Route path="orders" element={<OrdersManagement />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="reports" element={<ReportsPage />} />
-            </Route>
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoute adminOnly={true} />}>
+          <Route element={<AdminDashboard />}>
+            <Route path="/admin/dashboard" element={<AdminDashboardHome />} />
+            <Route path="/admin/products" element={<ProductManagement />} />
+            <Route path="/admin/categories" element={<CategoryManagement />} />
+            <Route path="/admin/orders" element={<OrdersManagement />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/reports" element={<ReportsPage />} />
           </Route>
         </Route>
 
@@ -84,7 +84,7 @@ const AppContent: React.FC = () => {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/order-confirmation/:orderId?" element={<OrderConfirmation />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/my-orders" element={<MyOrders />} />

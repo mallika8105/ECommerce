@@ -22,6 +22,7 @@ interface Category {
   name: string;
   description: string;
   image_url: string;
+  display_order: number;
 }
 
 interface Subcategory {
@@ -30,6 +31,7 @@ interface Subcategory {
   description: string;
   image_url: string;
   category_id: string;
+  display_order: number;
 }
 
 const CategoryManagement: React.FC = () => {
@@ -48,6 +50,7 @@ const CategoryManagement: React.FC = () => {
     name: "",
     description: "",
     image_url: "",
+    display_order: 0,
   });
   const [subcategoryFormData, setSubcategoryFormData] = useState<
     Omit<Subcategory, "id">
@@ -56,6 +59,7 @@ const CategoryManagement: React.FC = () => {
     description: "",
     image_url: "",
     category_id: "",
+    display_order: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +135,7 @@ const CategoryManagement: React.FC = () => {
   const handleAddCategory = () => {
     setIsEditMode(false);
     setCurrentCategory(null);
-    setFormData({ name: "", description: "", image_url: "" });
+    setFormData({ name: "", description: "", image_url: "", display_order: 0 });
     setIsModalOpen(true);
   };
 
@@ -142,6 +146,7 @@ const CategoryManagement: React.FC = () => {
       name: category.name,
       description: category.description,
       image_url: category.image_url,
+      display_order: category.display_order,
     });
     setIsModalOpen(true);
   };
@@ -171,6 +176,7 @@ const CategoryManagement: React.FC = () => {
       description: "",
       image_url: "",
       category_id: category.id,
+      display_order: 0,
     });
     setIsSubcategoryModalOpen(true);
   };
@@ -183,6 +189,7 @@ const CategoryManagement: React.FC = () => {
       description: subcategory.description,
       image_url: subcategory.image_url,
       category_id: subcategory.category_id,
+      display_order: subcategory.display_order,
     });
     setIsSubcategoryModalOpen(true);
   };
@@ -219,10 +226,7 @@ const CategoryManagement: React.FC = () => {
   const getCategorySubcategories = (categoryId: string) => {
     return subcategories
       .filter((sub) => sub.category_id === categoryId)
-      .sort(
-        (a, b) =>
-          ((a as any).display_order || 0) - ((b as any).display_order || 0)
-      );
+      .sort((a, b) => a.display_order - b.display_order);
   };
 
   const handleModalClose = () => {
@@ -272,7 +276,7 @@ const CategoryManagement: React.FC = () => {
       // Get the max display_order and add 1
       const maxOrder =
         categories.length > 0
-          ? Math.max(...categories.map((c) => (c as any).display_order || 0))
+          ? Math.max(...categories.map((c) => c.display_order))
           : 0;
 
       const { error } = await supabase
@@ -294,8 +298,8 @@ const CategoryManagement: React.FC = () => {
     if (index === 0) return; // Already at top
 
     const prevCategory = categories[index - 1];
-    const currentOrder = (category as any).display_order || index + 1;
-    const prevOrder = (prevCategory as any).display_order || index;
+    const currentOrder = category.display_order;
+    const prevOrder = prevCategory.display_order;
 
     // Swap display_order values
     await supabase
@@ -315,8 +319,8 @@ const CategoryManagement: React.FC = () => {
     if (index === categories.length - 1) return; // Already at bottom
 
     const nextCategory = categories[index + 1];
-    const currentOrder = (category as any).display_order || index + 1;
-    const nextOrder = (nextCategory as any).display_order || index + 2;
+    const currentOrder = category.display_order;
+    const nextOrder = nextCategory.display_order;
 
     // Swap display_order values
     await supabase
@@ -458,8 +462,8 @@ const CategoryManagement: React.FC = () => {
     if (localIndex === 0) return; // Already at top
 
     const prevSubcategory = categorySubcategories[localIndex - 1];
-    const currentOrder = (subcategory as any).display_order || localIndex + 1;
-    const prevOrder = (prevSubcategory as any).display_order || localIndex;
+    const currentOrder = subcategory.display_order;
+    const prevOrder = prevSubcategory.display_order;
 
     // Swap display_order values
     await supabase
@@ -483,8 +487,8 @@ const CategoryManagement: React.FC = () => {
     if (localIndex === categorySubcategories.length - 1) return; // Already at bottom
 
     const nextSubcategory = categorySubcategories[localIndex + 1];
-    const currentOrder = (subcategory as any).display_order || localIndex + 1;
-    const nextOrder = (nextSubcategory as any).display_order || localIndex + 2;
+    const currentOrder = subcategory.display_order;
+    const nextOrder = nextSubcategory.display_order;
 
     // Swap display_order values
     await supabase
@@ -503,9 +507,11 @@ const CategoryManagement: React.FC = () => {
   const handleSubcategoryFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // First check if we're authenticated
+      // Check if we're authenticated (either via Supabase or mock admin)
+      const adminLoggedIn = localStorage.getItem("adminLoggedIn");
       const session = await supabase.auth.getSession();
-      if (!session.data.session) {
+      
+      if (!session.data.session && adminLoggedIn !== "true") {
         setError("You must be logged in to perform this action.");
         return;
       }
@@ -532,11 +538,7 @@ const CategoryManagement: React.FC = () => {
         );
         const maxOrder =
           categorySubcategories.length > 0
-            ? Math.max(
-                ...categorySubcategories.map(
-                  (s) => (s as any).display_order || 0
-                )
-              )
+            ? Math.max(...categorySubcategories.map((s) => s.display_order))
             : 0;
 
         console.log("Adding new subcategory:", subcategoryFormData);

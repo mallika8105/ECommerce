@@ -12,8 +12,8 @@ interface WishlistItem {
 }
 
 const sampleWishlist: WishlistItem[] = [
-  { id: '1', name: 'Premium Wireless Headphones', price: 199.99, imageUrl: 'https://via.placeholder.com/150' },
-  { id: '2', name: 'Smartwatch', price: 129.99, imageUrl: 'https://via.placeholder.com/150' },
+  { id: '1', name: 'Premium Wireless Headphones', price: 199.99, imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%23999"%3EProduct%3C/text%3E%3C/svg%3E' },
+  { id: '2', name: 'Smartwatch', price: 129.99, imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%23999"%3EProduct%3C/text%3E%3C/svg%3E' },
 ];
 
 const WishlistPage: React.FC = () => {
