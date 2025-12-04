@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import Loader from '../components/Loader';
 import './SubCategoriesPage.css';
 
 interface SubCategory {
@@ -53,7 +54,9 @@ const SubCategoriesPage: React.FC = () => {
         <h1 className="subcategories-title">Sub-categories</h1>
 
         {loading ? (
-          <p className="loading">Loading sub-categories...</p>
+          <div className="flex justify-center items-center py-8">
+            <Loader text="Loading sub-categories" />
+          </div>
         ) : error ? (
           <p className="error">{error}</p>
         ) : subcategories.length === 0 ? (

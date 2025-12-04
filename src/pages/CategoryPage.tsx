@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient'; // Import supabase client
+import Loader from '../components/Loader';
 import './CategoryPage.css'; // Create this CSS file later
 
 interface Product {
@@ -91,7 +92,7 @@ const CategoryPage: React.FC = () => {
     return (
       <div className="category-page-container">
         <main className="category-page-main flex justify-center items-center">
-          <p className="loading-message">Loading products...</p>
+          <Loader text="Loading products" size="large" />
         </main>
       </div>
     );
@@ -119,7 +120,7 @@ const CategoryPage: React.FC = () => {
                   <img src={product.image_url} alt={product.name} className="product-image" />
                   <h3 className="product-name">{product.name}</h3>
                 </Link>
-                <p className="product-price">₹{product.price.toFixed(2)}</p>
+                <p className="product-price">₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <Button variant="primary" onClick={() => addToCart(product)}>Add to Cart</Button>
               </Card>
             ))}

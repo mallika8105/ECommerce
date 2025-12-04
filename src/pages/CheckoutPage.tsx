@@ -53,7 +53,7 @@ const CheckoutPage: React.FC = () => {
           .from('profiles')
           .select('full_name, phone, address')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         console.log('Profile data fetched:', data);
         console.log('Profile error:', error);
@@ -441,7 +441,7 @@ const CheckoutPage: React.FC = () => {
                       />
                       <span className="flex-1">{item.name} (x{item.quantity})</span>
                       <span className="font-semibold">
-                        ₹{(item.price * (item.quantity || 1)).toFixed(2)}
+                        ₹{(item.price * (item.quantity || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))

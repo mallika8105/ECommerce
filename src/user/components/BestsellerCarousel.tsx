@@ -233,7 +233,7 @@ export default function BestsellerCarousel() {
                   {/* Price */}
                   <div className="product-price">
                     <span className="current-price">
-                      ₹{product.price.toLocaleString("en-IN")}
+                      ₹{product.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
 

@@ -263,7 +263,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                           {product.name}
                         </h4>
                         <p className="text-lg font-semibold text-gray-900">
-                          ₹{product.price.toLocaleString()}
+                          ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                         {product.stock > 0 ? (
                           <p className="text-sm text-green-600">In Stock</p>

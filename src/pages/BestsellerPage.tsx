@@ -5,6 +5,7 @@ import '../pages/BestsellerPage.css';
 import ProductCard from '../components/ProductCard';
 import Button from '../components/Button';
 import SkeletonCard from '../components/SkeletonCard';
+import Loader from '../components/Loader';
 
 interface Product {
   id: string;

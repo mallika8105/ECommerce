@@ -57,7 +57,7 @@ const AuthForm: React.FC = () => {
           />
         </div>
         <button type="submit" disabled={loading}>
-          {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
+          {loading ? (isLogin ? 'Logging in...' : 'Signing up...') : (isLogin ? 'Login' : 'Sign Up')}
         </button>
       </form>
       <p className="toggle-auth">

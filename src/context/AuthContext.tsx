@@ -115,16 +115,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log(
-        "AuthContext: onAuthStateChange event:",
-        event,
-        "hasSession:",
-        !!currentSession
-      );
-
       // Don't override mock admin session
       if (localStorage.getItem("adminLoggedIn") === "true") {
-        console.log("AuthContext: Skipping - mock admin session active");
         return;
       }
 
@@ -140,7 +132,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       // ALWAYS set loading to false immediately
-      console.log("AuthContext: Setting loading to false");
       setLoading(false);
     });
 

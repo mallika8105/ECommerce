@@ -38,18 +38,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ adminOnly = false }) =>
   }
 
   // Handle authentication and authorization
-  if (!user && adminOnly) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  if (!user && !adminOnly) {
+  if (!user) {
+    // No user logged in
+    if (adminOnly) {
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/auth" replace />;
   }
 
-  if (user && adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
+  // User is logged in
+  if (adminOnly) {
+    // For admin routes, check if user is admin
+    if (!isAdmin) {
+      // Not an admin, redirect to home
+      return <Navigate to="/" replace />;
+    }
+    // User is admin, allow access
+    return <Outlet />;
   }
 
+  // For regular protected routes, user is logged in
   return <Outlet />;
 };
 

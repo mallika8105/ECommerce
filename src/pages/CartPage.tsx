@@ -29,7 +29,7 @@ const CartPage: React.FC = () => {
                   <img src={item.image_url} alt={item.name} className="w-24 h-24 object-contain rounded-md mr-4" />
                   <div className="flex-grow">
                     <h3 className="text-xl font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-orange-600 font-bold text-lg">${item.price.toFixed(2)}</p>
+                    <p className="text-orange-600 font-bold text-lg">₹{item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button

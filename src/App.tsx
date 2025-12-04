@@ -58,13 +58,13 @@ const AppContent: React.FC = () => {
   return (
     <>
       <Routes>
-        {/* Admin Routes - Outside main layout to avoid header/footer */}
-        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        {/* Admin Login Route - Outside protection */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
         
         {/* Protected Admin Routes */}
         <Route element={<ProtectedRoute adminOnly={true} />}>
           <Route element={<AdminDashboard />}>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboardHome />} />
             <Route path="/admin/products" element={<ProductManagement />} />
             <Route path="/admin/categories" element={<CategoryManagement />} />

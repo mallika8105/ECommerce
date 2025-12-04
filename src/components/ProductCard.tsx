@@ -21,8 +21,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    console.log('ProductCard: Navigating to:', `/products/${product.id}`, 'with ID:', product.id); // More detailed debug log
-    navigate(`/products/${product.id}`); // Navigate to product details page (corrected to plural 'products')
+    console.log('ProductCard: Navigating to:', `/product/${product.id}`, 'with ID:', product.id); // More detailed debug log
+    navigate(`/product/${product.id}`); // Navigate to product details page
   };
 
   return (
@@ -33,11 +33,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rank }) => {
       </div>
       <div className="product-card-details">
         <h3 className="product-card-name">
-          <a href={`/products/${product.id}`} onClick={handleCardClick} className="product-name-link">
+          <a href={`/product/${product.id}`} onClick={handleCardClick} className="product-name-link">
             {product.name}
           </a>
         </h3>
-        <p className="product-card-price">₹{product.price.toLocaleString('en-IN')}</p>
+        <p className="product-card-price">₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <div className="product-card-rating">
           {'⭐'.repeat(Math.floor(product.rating))} ({product.reviews} reviews)
         </div>

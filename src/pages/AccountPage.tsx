@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'; // Import supabase
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import Loader from '../components/Loader';
 
 interface Profile {
   id: string;
@@ -56,19 +57,38 @@ const AccountPage: React.FC = () => {
         console.log('AccountPage: fetchProfile: Querying profiles table for user ID:', user.id);
         const { data, error } = await supabase
           .from('profiles')
-          .select('name, email, phone, address, city, state, pincode') // Select all fields
+          .select('name, email, phone, address, city, state, pincode')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to avoid error when no rows
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+        if (error) {
           console.error('AccountPage: fetchProfile: Error fetching profile:', error);
           setUpdateMessage(`Error fetching profile: ${error.message}`);
-        } else if (error && error.code === 'PGRST116') {
-          // Profile not found, create a new one
-          console.log('AccountPage: fetchProfile: Profile not found for user:', user.id, ', attempting to create a new one.');
-          const { error: createError } = await supabase
+        } else if (!data) {
+          // Profile not found by ID, check if one exists with this email
+          console.log('AccountPage: fetchProfile: No profile found by ID, checking by email:', user.email);
+          
+          const { data: emailProfile } = await supabase
             .from('profiles')
-            .upsert({
+            .select('id, name, email, phone, address, city, state, pincode')
+            .eq('email', user.email)
+            .maybeSingle();
+
+          if (emailProfile && isMounted) {
+            // Profile exists with this email but different ID - just use the data
+            console.log('AccountPage: fetchProfile: Found existing profile by email, using its data');
+            setProfile(emailProfile as Profile);
+            setEditName(emailProfile.name || user.user_metadata?.name || '');
+            setEditEmail(emailProfile.email || user.email || '');
+            setEditPhone(emailProfile.phone || user.phone || '');
+            setEditAddress(emailProfile.address || '');
+            setEditCity(emailProfile.city || '');
+            setEditState(emailProfile.state || '');
+            setEditPincode(emailProfile.pincode || '');
+          } else {
+            // No profile exists at all, create a new one
+            console.log('AccountPage: fetchProfile: No profile found, creating new one for user:', user.id);
+            const newProfile = {
               id: user.id,
               name: user.user_metadata?.name || '',
               email: user.email || '',
@@ -77,53 +97,45 @@ const AccountPage: React.FC = () => {
               city: '',
               state: '',
               pincode: '',
-            }, { onConflict: 'id' });
+            };
 
-          if (createError) {
-            console.error('AccountPage: fetchProfile: Error creating profile:', createError);
-            setUpdateMessage(`Error creating profile: ${createError.message}`);
-          } else {
-            console.log('AccountPage: fetchProfile: Profile created successfully for user:', user.id, '. Re-fetching profile data.');
-            // Successfully created, now fetch it again
-            const { data: newData, error: newFetchError } = await supabase
+            const { data: insertedData, error: insertError } = await supabase
               .from('profiles')
-              .select('name, email, phone, address, city, state, pincode')
-              .eq('id', user.id)
+              .insert(newProfile)
+              .select()
               .single();
 
-            if (newFetchError) {
-              console.error('AccountPage: fetchProfile: Error re-fetching profile after creation:', newFetchError);
-              setUpdateMessage(`Error re-fetching profile: ${newFetchError.message}`);
-            } else if (newData) {
-              setProfile(newData as Profile);
-              setEditName(newData.name || user.user_metadata?.name || '');
-              setEditEmail(newData.email || user.email || '');
-              setEditPhone(newData.phone || user.phone || '');
-              setEditAddress(newData.address || '');
-              setEditCity(newData.city || '');
-              setEditState(newData.state || '');
-              setEditPincode(newData.pincode || '');
-              setUpdateMessage('Profile created and fetched successfully!');
-              console.log('AccountPage: fetchProfile: Re-fetched profile data:', newData);
+            if (insertError) {
+              console.error('AccountPage: fetchProfile: Error creating profile:', insertError);
+              setUpdateMessage(`Error creating profile: ${insertError.message}`);
+            } else if (insertedData && isMounted) {
+              console.log('AccountPage: fetchProfile: Profile created successfully:', insertedData);
+              setProfile(insertedData as Profile);
+              setEditName(insertedData.name || '');
+              setEditEmail(insertedData.email || '');
+              setEditPhone(insertedData.phone || '');
+              setEditAddress(insertedData.address || '');
+              setEditCity(insertedData.city || '');
+              setEditState(insertedData.state || '');
+              setEditPincode(insertedData.pincode || '');
             }
           }
-        } else if (data) {
-          if (isMounted) {
-            setProfile(data as Profile);
-            setEditName(data.name || user.user_metadata?.name || '');
-            setEditEmail(data.email || user.email || '');
-            setEditPhone(data.phone || user.phone || '');
-            setEditAddress(data.address || '');
-            setEditCity(data.city || '');
-            setEditState(data.state || '');
-            setEditPincode(data.pincode || '');
-            console.log('AccountPage: fetchProfile: Existing profile data found:', data);
-          }
+        } else if (data && isMounted) {
+          // Profile found, update state
+          console.log('AccountPage: fetchProfile: Existing profile data found:', data);
+          setProfile(data as Profile);
+          setEditName(data.name || user.user_metadata?.name || '');
+          setEditEmail(data.email || user.email || '');
+          setEditPhone(data.phone || user.phone || '');
+          setEditAddress(data.address || '');
+          setEditCity(data.city || '');
+          setEditState(data.state || '');
+          setEditPincode(data.pincode || '');
         }
       } catch (err: any) {
         console.error('AccountPage: fetchProfile: Unexpected error:', err);
         if (isMounted) {
-          setUpdateMessage(`Unexpected error fetching profile: ${err.message}`);
+          setUpdateMessage(`Unexpected error: ${err.message}`);
         }
       } finally {
         console.log('AccountPage: fetchProfile completed.');
@@ -177,21 +189,40 @@ const AccountPage: React.FC = () => {
         if (authError) throw authError;
       }
 
-      // Always update the 'profiles' table for all fields
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          name: editName,
-          email: editEmail,
-          phone: editPhone,
-          address: editAddress,
-          city: editCity,
-          state: editState,
-          pincode: editPincode,
-        }, { onConflict: 'id' }); // Upsert to create or update
+      // Update the 'profiles' table for all fields
+      if (profile) {
+        // Profile exists - use UPDATE
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            name: editName,
+            email: editEmail,
+            phone: editPhone,
+            address: editAddress,
+            city: editCity,
+            state: editState,
+            pincode: editPincode,
+          })
+          .eq('id', profile.id);
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
+      } else {
+        // No profile exists - use INSERT
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            name: editName,
+            email: editEmail,
+            phone: editPhone,
+            address: editAddress,
+            city: editCity,
+            state: editState,
+            pincode: editPincode,
+          });
+
+        if (profileError) throw profileError;
+      }
 
       setUpdateMessage('Profile updated successfully!');
       // The AuthContext's onAuthStateChange listener should handle session updates.
@@ -213,7 +244,7 @@ const AccountPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading account details...</p>
+        <Loader text="Loading account details" />
       </div>
     );
   }
@@ -234,7 +265,7 @@ const AccountPage: React.FC = () => {
         <h2 className="text-2xl font-semibold mb-4">Profile Information</h2>
         {isLoadingProfile ? (
           <div className="flex items-center justify-center py-8">
-            <p className="text-gray-600">Loading profile data...</p>
+            <Loader text="Loading profile data" />
           </div>
         ) : (
           <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -317,11 +348,14 @@ const AccountPage: React.FC = () => {
 
       <Card className="p-6">
         <h2 className="text-2xl font-semibold mb-4">Order History</h2>
-        <p>Your past orders will appear here.</p>
-        {/* Placeholder for order list */}
-        <div className="mt-4">
-          <p className="text-gray-600">No orders found yet.</p>
-        </div>
+        <p className="text-gray-600 mb-4">View and track all your orders.</p>
+        <Button 
+          variant="secondary" 
+          onClick={() => navigate('/my-orders')}
+          className="w-full md:w-auto"
+        >
+          View Order History
+        </Button>
       </Card>
     </div>
   );

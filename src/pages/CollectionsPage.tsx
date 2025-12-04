@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient'; // Import supabase client
+import Loader from '../components/Loader';
 import './CollectionsPage.css';
 
 interface Category {
@@ -65,7 +66,7 @@ const CollectionsPage: React.FC = () => {
     return (
       <div className="collections-container">
         <main className="collections-main flex justify-center items-center">
-          <p className="loading-message">Loading categories...</p>
+          <Loader text="Loading categories" size="large" />
         </main>
       </div>
     );

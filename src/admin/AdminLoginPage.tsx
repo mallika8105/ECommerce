@@ -13,16 +13,19 @@ const AdminLoginPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { signIn, signOut, user, isAdmin } = useAuth();
+  const { signIn, signOut, user, isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Don't redirect while auth is still loading
+    if (authLoading) return;
+    
+    // If user is logged in and is admin, redirect to dashboard
     if (user && isAdmin) {
-      navigate('/admin/dashboard');
-    } else if (user && !isAdmin) {
-      // If a non-admin user somehow lands here and is logged in, redirect them away
-      navigate('/');
+      navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, isAdmin, navigate]);
+    // Note: We don't redirect non-admin users from the login page
+    // They can stay here to try logging in as admin
+  }, [user, isAdmin, authLoading, navigate]);
 
   const handleLogout = async () => {
     setLoading(true);

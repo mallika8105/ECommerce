@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import { useCart } from '../context/CartContext';
 import { Link, useParams } from 'react-router-dom'; // Import useParams
 import { supabase } from '../supabaseClient';
+import Loader from '../components/Loader';
 import './ProductListing.css'; // Import the custom CSS file
 
 interface Product {
@@ -75,7 +76,7 @@ const ProductListing: React.FC = () => {
     return (
       <div className="product-listing-container">
         <main className="product-listing-main flex justify-center items-center">
-          <p className="loading-message">Loading products...</p>
+          <Loader text="Loading products" size="large" />
         </main>
       </div>
     );
@@ -100,10 +101,10 @@ const ProductListing: React.FC = () => {
           {products.length > 0 ? (
             products.map((product) => (
               <Card key={product.id} className="product-card">
-                <Link to={`/products/${product.id}`} onClick={() => console.log('ProductListing: Clicking product with ID:', product.id)}> {/* Debug log */}
+                <Link to={`/product/${product.id}`} onClick={() => console.log('ProductListing: Clicking product with ID:', product.id)}> {/* Debug log */}
                   <img src={product.image_url} alt={product.name} className="product-image" />
                   <h3 className="product-name">{product.name}</h3>
-                  <p className="product-price">₹{product.price.toFixed(2)}</p>
+                  <p className="product-price">₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </Link>
                 <p className="product-description">{product.description}</p>
                 {product.color && <p className="product-color">Color: {product.color}</p>}

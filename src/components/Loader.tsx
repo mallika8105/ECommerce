@@ -1,22 +1,38 @@
 import React from 'react';
+import './Loader.css';
 
 interface LoaderProps {
   size?: 'small' | 'medium' | 'large';
   color?: string;
+  text?: string;
 }
 
-const Loader: React.FC<LoaderProps> = ({ size = 'medium', color = 'border-blue-500' }) => {
-  const sizeClasses = {
-    small: 'w-6 h-6 border-2',
-    medium: 'w-10 h-10 border-4',
-    large: 'w-16 h-16 border-4',
+const Loader: React.FC<LoaderProps> = ({ 
+  size = 'medium', 
+  color = 'bg-black', 
+  text
+}) => {
+  // Bouncing dots variant
+  const dotSizeClasses = {
+    small: 'w-2 h-2',
+    medium: 'w-3 h-3',
+    large: 'w-4 h-4',
+  };
+
+  const gapClasses = {
+    small: 'gap-1',
+    medium: 'gap-2',
+    large: 'gap-3',
   };
 
   return (
-    <div className="flex justify-center items-center">
-      <div
-        className={`ease-linear rounded-full border-t-2 border-gray-200 animate-spin ${sizeClasses[size]} ${color}`}
-      ></div>
+    <div className="flex flex-col justify-center items-center gap-3">
+      <div className={`flex items-center ${gapClasses[size]}`}>
+        <div className={`${dotSizeClasses[size]} ${color} rounded-full bounce-dot bounce-dot-1`}></div>
+        <div className={`${dotSizeClasses[size]} ${color} rounded-full bounce-dot bounce-dot-2`}></div>
+        <div className={`${dotSizeClasses[size]} ${color} rounded-full bounce-dot bounce-dot-3`}></div>
+      </div>
+      {text && <p className="text-gray-600 text-sm animate-pulse">{text}</p>}
     </div>
   );
 };
