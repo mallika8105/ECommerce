@@ -7,13 +7,14 @@ interface Product {
   image_url: string; // Changed to match database column name
   product_code?: string; // Add product_code for order items
   quantity?: number; // Made quantity optional
+  size?: string; // Add size for products with size options
 }
 
 interface CartContextType {
   cartItems: Product[];
   addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, size?: string) => void;
+  updateQuantity: (productId: string, quantity: number, size?: string) => void;
   isDrawerOpen: boolean;
   toggleDrawer: () => void;
   clearCart: () => void; // Add clearCart to the interface
@@ -27,10 +28,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addToCart = (productToAdd: Product) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === productToAdd.id);
+      // Check if item with same id AND size exists (if size is provided)
+      const existingItem = prevItems.find((item) => 
+        item.id === productToAdd.id && 
+        (productToAdd.size ? item.size === productToAdd.size : !item.size)
+      );
+      
       if (existingItem) {
         return prevItems.map((item) =>
-          item.id === productToAdd.id ? { ...item, quantity: (item.quantity || 0) + 1 } : item
+          item.id === productToAdd.id && 
+          (productToAdd.size ? item.size === productToAdd.size : !item.size)
+            ? { ...item, quantity: (item.quantity || 0) + 1 } 
+            : item
         );
       } else {
         return [...prevItems, { ...productToAdd, quantity: 1 }];
@@ -43,13 +52,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsDrawerOpen((prev) => !prev);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  const removeFromCart = (productId: string, size?: string) => {
+    setCartItems((prevItems) => 
+      prevItems.filter((item) => {
+        if (size !== undefined) {
+          return !(item.id === productId && item.size === size);
+        }
+        return item.id !== productId;
+      })
+    );
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, size?: string) => {
     setCartItems((prevItems) =>
-      prevItems.map((item) => (item.id === productId ? { ...item, quantity } : item))
+      prevItems.map((item) => {
+        if (size !== undefined) {
+          return (item.id === productId && item.size === size) ? { ...item, quantity } : item;
+        }
+        return item.id === productId ? { ...item, quantity } : item;
+      })
     );
   };
 

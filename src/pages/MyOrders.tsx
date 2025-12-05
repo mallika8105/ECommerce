@@ -3,9 +3,10 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import EmptyState from '../components/EmptyState';
-import { Package, Truck, CheckCircle, Info } from 'lucide-react';
+import { Package, Truck, CheckCircle, Info, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
   id: string;
@@ -31,6 +32,7 @@ interface Order {
 
 const MyOrders: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -146,7 +148,16 @@ const MyOrders: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
+      {/* Close button - positioned absolutely in top-right corner */}
+      <button 
+        onClick={() => navigate(-1)} 
+        className="fixed top-20 right-4 bg-white rounded-full p-2 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 z-50"
+        aria-label="Close orders page"
+      >
+        <X size={20} strokeWidth={2.5} />
+      </button>
+
       <main className="flex-grow container mx-auto p-4">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">My Orders</h1>
 

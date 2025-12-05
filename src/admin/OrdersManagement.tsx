@@ -279,16 +279,7 @@ const OrdersManagement: React.FC = () => {
         <Modal isOpen={isModalOpen} onClose={handleModalClose} title={`Order #${selectedOrder.id.slice(0, 8).toUpperCase()}`}>
           <div className="space-y-4 text-gray-700">
             <div className="border-b pb-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-800">Order Information</h3>
-                <button
-                  onClick={handleModalClose}
-                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-all duration-200"
-                  aria-label="Close order details"
-                >
-                  <XCircle size={20} />
-                </button>
-              </div>
+              <h3 className="font-semibold text-gray-800 mb-2">Order Information</h3>
               <p className="text-sm"><strong>Order ID:</strong> {selectedOrder.id}</p>
               <p className="text-sm"><strong>Date:</strong> {formatDate(selectedOrder.created_at)}</p>
               <p className="text-sm flex items-center">

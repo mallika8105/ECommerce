@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { CheckCircle } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { CheckCircle, X } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 interface Order {
@@ -15,6 +15,7 @@ interface Order {
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +54,16 @@ const OrderConfirmation: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
+      {/* Close button - positioned absolutely in top-right corner */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="fixed top-20 right-4 bg-white rounded-full p-2 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 z-50"
+        aria-label="Close order confirmation"
+      >
+        <X size={20} strokeWidth={2.5} />
+      </button>
+
       <main className="flex-grow container mx-auto p-4 flex items-center justify-center">
         <Card className="p-8 text-center max-w-2xl w-full">
           <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />

@@ -20,6 +20,7 @@ interface Product {
   category_name?: string;
   is_featured?: boolean;
   is_bestseller?: boolean;
+  requires_size_chart?: boolean;
 }
 
 interface Category {
@@ -51,7 +52,8 @@ const ProductManagement: React.FC = () => {
     image_url: '',
     product_code: '',
     is_featured: false,
-    is_bestseller: false
+    is_bestseller: false,
+    requires_size_chart: false
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +141,8 @@ const ProductManagement: React.FC = () => {
       image_url: '',
       product_code: '',
       is_featured: false,
-      is_bestseller: false
+      is_bestseller: false,
+      requires_size_chart: false
     });
     setFilteredSubCategories([]);
     setIsModalOpen(true);
@@ -157,7 +160,8 @@ const ProductManagement: React.FC = () => {
       product_code: product.product_code,
       image_url: product.image_url || '',
       is_featured: product.is_featured || false,
-      is_bestseller: product.is_bestseller || false
+      is_bestseller: product.is_bestseller || false,
+      requires_size_chart: product.requires_size_chart || false
     });
     
     // Filter subcategories based on the product's category
@@ -215,8 +219,12 @@ const ProductManagement: React.FC = () => {
         subcategory_id: '' // Reset subcategory when category changes
       }));
     } else if (name === 'name') {
-      // Auto-generate product code when product name changes
-      const generatedCode = value ? generateProductCode(value) : '';
+      // Auto-generate product code ONLY when adding a new product (not editing)
+      // In edit mode, keep the existing product code
+      const generatedCode = isEditMode && currentProduct 
+        ? currentProduct.product_code 
+        : (value ? generateProductCode(value) : '');
+      
       setFormData((prev) => ({
         ...prev,
         name: value,
@@ -242,6 +250,18 @@ const ProductManagement: React.FC = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for duplicate product code (excluding current product in edit mode)
+    const duplicateProduct = products.find(p => 
+      p.product_code === formData.product_code && 
+      (!isEditMode || p.id !== currentProduct?.id)
+    );
+    
+    if (duplicateProduct) {
+      alert(`Product code "${formData.product_code}" already exists for product: "${duplicateProduct.name}". Please modify the product name to generate a unique code.`);
+      return;
+    }
+    
     const productData = {
       name: formData.name,
       category_id: formData.category_id,
@@ -251,7 +271,8 @@ const ProductManagement: React.FC = () => {
       product_code: formData.product_code,
       image_url: formData.image_url || null,
       is_featured: Boolean(formData.is_featured),
-      is_bestseller: Boolean(formData.is_bestseller)
+      is_bestseller: Boolean(formData.is_bestseller),
+      requires_size_chart: Boolean(formData.requires_size_chart)
     };
 
     console.log('Form Data:', formData);
@@ -269,7 +290,18 @@ const ProductManagement: React.FC = () => {
       
       if (error) {
         console.error('Error updating product:', error);
-        setError('Failed to update product: ' + error.message);
+        
+        // Handle specific error types with user-friendly messages
+        let errorMessage = 'Failed to update product.';
+        if (error.code === '23505') {
+          errorMessage = 'A product with this code already exists. Please use a different product name.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+        setError(errorMessage);
+        return; // Don't close modal on error
       } else {
         // Even if data is empty (RLS blocking select), if no error then update succeeded
         console.log('Product updated successfully');
@@ -278,6 +310,7 @@ const ProductManagement: React.FC = () => {
         
         // Show success message
         alert('Product updated successfully!');
+        setIsModalOpen(false);
       }
     } else {
       console.log('Inserting new product');
@@ -290,38 +323,56 @@ const ProductManagement: React.FC = () => {
       
       if (error) {
         console.error('Error adding product:', error);
-        setError('Failed to add product: ' + error.message);
+        
+        // Handle specific error types with user-friendly messages
+        let errorMessage = 'Failed to add product.';
+        if (error.code === '23505') {
+          // Duplicate key error
+          if (error.details?.includes('product_code')) {
+            errorMessage = 'A product with this code already exists. Please modify the product name to generate a unique code.';
+          } else {
+            errorMessage = 'This product already exists in the database.';
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+        setError(errorMessage);
+        return; // Don't close modal on error
       } else {
         console.log('Product added successfully:', data);
-        fetchProducts(); // Re-fetch products to get the new product
+        await fetchProducts(); // Re-fetch products to get the new product
         setError(null);
+        alert('Product added successfully!');
+        setIsModalOpen(false);
       }
     }
-    setIsModalOpen(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <main className="flex-grow container mx-auto px-6 py-8">
-        {/* Header Section with Back Button */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate('/admin')}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 shadow-sm"
-            aria-label="Go back to dashboard"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your product inventory</p>
+        {/* Header Section with Back Button and Add Product Button */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/admin')}
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 shadow-sm"
+              aria-label="Go back to dashboard"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+              <p className="text-sm text-gray-500 mt-1">Manage your product inventory</p>
+            </div>
           </div>
-        </div>
-
-        <div className="flex justify-end mb-6">
-          <Button variant="primary" onClick={handleAddProduct}>
-            <PlusCircle size={20} className="mr-2" /> Add New Product
-          </Button>
+          <div>
+            <Button variant="primary" onClick={handleAddProduct}>
+              <PlusCircle size={20} className="mr-2" /> Add New Product
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -358,58 +409,64 @@ const ProductManagement: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Image</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Stock</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tags</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">Image</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">Product Name</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Price</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Stock</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tags</th>
+                    <th className="px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {products.map((product) => (
                     <tr key={product.id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         {product.image_url ? (
                           <img
                             src={product.image_url}
                             alt={product.name}
-                            className="h-12 w-12 rounded-lg object-cover border border-gray-200 shadow-sm"
+                            className="h-14 w-14 rounded-lg object-cover border border-gray-200 shadow-sm"
                           />
                         ) : (
-                          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border border-gray-200">
+                          <div className="h-14 w-14 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border border-gray-200">
                             <span className="text-gray-400 text-xs font-medium">No img</span>
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                      <td className="px-4 py-4">
+                        <div className="text-sm font-semibold text-gray-900 max-w-xs break-words">{product.name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-700">{product.category_name}</span>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-700">{product.category_name || '-'}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">{product.product_code}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <span className="text-sm font-semibold text-gray-900">{formatPrice(product.price)}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {product.stock}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          product.stock > 10 
+                            ? 'bg-green-100 text-green-700 border border-green-200' 
+                            : product.stock > 0 
+                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' 
+                            : 'bg-red-100 text-red-700 border border-red-200'
+                        }`}>
+                          {product.stock} units
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4">
                         <div className="flex gap-1.5 flex-wrap">
                           {product.is_featured && (
-                            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                               Featured
                             </span>
                           )}
                           {product.is_bestseller && (
-                            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">
+                            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200 whitespace-nowrap">
                               Bestseller
                             </span>
                           )}
@@ -418,14 +475,20 @@ const ProductManagement: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
-                          <Button variant="secondary" size="small" onClick={() => handleEditProduct(product)}>
-                            <Edit size={16} className="mr-1" /> Edit
-                          </Button>
-                          <Button variant="danger" size="small" onClick={() => handleDeleteProduct(product.id)}>
-                            <Trash2 size={16} className="mr-1" /> Delete
-                          </Button>
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="inline-flex items-center px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors duration-200 border border-blue-200 text-xs font-semibold"
+                          >
+                            <Edit size={14} className="mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors duration-200 border border-red-200 text-xs font-semibold"
+                          >
+                            <Trash2 size={14} className="mr-1" /> Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -572,6 +635,20 @@ const ProductManagement: React.FC = () => {
               <span className="text-sm font-medium text-gray-900">
                 Mark as Bestseller
                 <span className="block text-xs text-gray-500">Will appear in Bestsellers carousel and page</span>
+              </span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="requires_size_chart"
+                checked={formData.requires_size_chart}
+                onChange={handleFormChange}
+                className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              />
+              <span className="text-sm font-medium text-gray-900">
+                Requires Size Chart
+                <span className="block text-xs text-gray-500">Enable size chart button for this product (e.g., clothing, shoes)</span>
               </span>
             </label>
           </div>

@@ -23,6 +23,8 @@ const ProductListing: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [subcategoryName, setSubcategoryName] = useState<string>('');
+  const [categoryName, setCategoryName] = useState<string>('');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -30,6 +32,34 @@ const ProductListing: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
+        // Reset names first
+        setSubcategoryName('');
+        setCategoryName('');
+
+        // Fetch subcategory or category name
+        if (subcategoryId) {
+          const { data: subcategoryData } = await supabase
+            .from('subcategories')
+            .select('name')
+            .eq('id', subcategoryId)
+            .single();
+          
+          if (subcategoryData) {
+            setSubcategoryName(subcategoryData.name);
+          }
+        } else if (categoryId) {
+          const { data: categoryData } = await supabase
+            .from('categories')
+            .select('name')
+            .eq('id', categoryId)
+            .single();
+          
+          if (categoryData) {
+            setCategoryName(categoryData.name);
+          }
+        }
+
+        // Fetch products
         let query = supabase
           .from('products')
           .select('*');
@@ -67,7 +97,7 @@ const ProductListing: React.FC = () => {
     };
 
     fetchProducts();
-  }, [categoryId]); // Re-run effect when categoryId changes
+  }, [categoryId, subcategoryId]); // Re-run effect when categoryId or subcategoryId changes
 
   // Log the products array to debug
   products.forEach(p => console.log("Product ID:", p.id, "Name:", p.name));
@@ -95,7 +125,7 @@ const ProductListing: React.FC = () => {
   return (
     <div className="product-listing-container">
       <main className="product-listing-main">
-  <h1 className="product-listing-title">{subcategoryId ? `Products in Subcategory: ${subcategoryId}` : categoryId ? `Products in Category: ${categoryId}` : 'Shop All Products'}</h1>
+  <h1 className="product-listing-title">{subcategoryName || categoryName || 'Shop All Products'}</h1>
         {error && <p className="warning-message">Warning: {error}</p>}
         <div className="product-grid">
           {products.length > 0 ? (

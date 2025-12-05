@@ -3,10 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import { Star } from 'lucide-react';
+import { Star, Ruler } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext'; // Import useCart
 import Loader from '../components/Loader';
+import SizeChartModal from '../components/SizeChartModal';
 import './ProductDetails.css'; // Import the custom CSS file
 
 interface Product {
@@ -23,6 +24,7 @@ interface Product {
   colors?: string[]; // New field for product colors
   size_chart_url?: string; // New field for size chart URL
   available_sizes?: string[]; // New field for available sizes
+  requires_size_chart?: boolean; // New field to control size chart display
 }
 
 interface Review {
@@ -46,6 +48,8 @@ const ProductDetails: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null); // New state for selected size
   const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [categoryName, setCategoryName] = useState<string>(''); // New state for category name
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false); // New state for size chart modal
 
   // Scroll to top when component mounts or productId changes
   useEffect(() => {
@@ -79,12 +83,26 @@ const ProductDetails: React.FC = () => {
             colors: data.colors || [], // Initialize colors
             size_chart_url: data.size_chart_url || '', // Initialize size_chart_url
             available_sizes: data.available_sizes || [], // Initialize available_sizes
+            requires_size_chart: data.requires_size_chart || false, // Initialize requires_size_chart
           };
           setProduct(fetchedProduct);
           setMainImage(fetchedProduct.image_url);
 
           if (fetchedProduct.available_sizes && fetchedProduct.available_sizes.length > 0) {
             setSelectedSize(fetchedProduct.available_sizes[0]); // Automatically select the first size
+          }
+
+          // Fetch category information
+          if (fetchedProduct.category_id) {
+            const { data: categoryData, error: categoryError } = await supabase
+              .from('categories')
+              .select('name')
+              .eq('id', fetchedProduct.category_id)
+              .single();
+
+            if (!categoryError && categoryData) {
+              setCategoryName(categoryData.name);
+            }
           }
 
           // Fetch reviews (placeholder for now)
@@ -131,13 +149,13 @@ const ProductDetails: React.FC = () => {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart({ ...product, quantity: quantity });
+      addToCart({ ...product, quantity: quantity, size: selectedSize || undefined });
     }
   };
 
   const handleBuyNow = () => {
     if (product) {
-      addToCart({ ...product, quantity: quantity });
+      addToCart({ ...product, quantity: quantity, size: selectedSize || undefined });
       navigate('/checkout'); // Navigate to checkout page
     }
   };
@@ -196,13 +214,20 @@ const ProductDetails: React.FC = () => {
 
           {/* Product Info & Description - Right Side */}
           <div className="product-info-description">
+            {/* Product Details Heading First */}
+            <h2 className="product-details-title-main">Product Details</h2>
+            
+            {/* Then Product Name */}
             <h1 className="product-name">{product.name}</h1>
+            
+            {/* Then Price */}
             <p className="product-price">₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            
             <p className="product-description">{product.description}</p>
 
             {/* Product Description Details (Color, Size Chart, etc.) */}
             <div className="product-details-section">
-              <h2 className="product-details-title">Product Details</h2>
+              <h3 className="product-details-subtitle">Specifications</h3>
 
               {/* Color Selection */}
               {product.colors && product.colors.length > 0 && (
@@ -225,7 +250,7 @@ const ProductDetails: React.FC = () => {
               {product.available_sizes && product.available_sizes.length > 0 && (
                 <div className="detail-item">
                   <h3 className="detail-label">Size:</h3>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mb-3">
                     {product.available_sizes.map((size, index) => (
                       <button
                         key={index}
@@ -236,14 +261,33 @@ const ProductDetails: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  {selectedSize && (
+                    <div className="selected-size-display">
+                      <span className="selected-size-label">Selected Size:</span>
+                      <span className="selected-size-value">{selectedSize}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Size Chart Link */}
+              {/* Size Chart Button - Show only if product requires size chart */}
+              {product.requires_size_chart && (
+                <div className="detail-item">
+                  <button 
+                    onClick={() => setIsSizeChartOpen(true)}
+                    className="size-chart-button"
+                  >
+                    <Ruler size={18} className="inline mr-2" />
+                    View Size Chart
+                  </button>
+                </div>
+              )}
+
+              {/* Size Chart Link - Legacy support */}
               {product.size_chart_url && (
                 <div className="detail-item">
                   <Link to={product.size_chart_url} target="_blank" rel="noopener noreferrer" className="size-chart-link">
-                    View Size Chart
+                    View External Size Chart
                   </Link>
                 </div>
               )}
@@ -310,6 +354,15 @@ const ProductDetails: React.FC = () => {
           </div>
         </section>
       </main>
+
+      {/* Size Chart Modal */}
+      <SizeChartModal 
+        isOpen={isSizeChartOpen}
+        onClose={() => setIsSizeChartOpen(false)}
+        categoryName={categoryName}
+        onSelectSize={setSelectedSize}
+        selectedSize={selectedSize}
+      />
     </div>
   );
 };

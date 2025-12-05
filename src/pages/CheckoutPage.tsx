@@ -207,6 +207,7 @@ const CheckoutPage: React.FC = () => {
           quantity: item.quantity || 1,
           price: item.price,
           subtotal: item.price * (item.quantity || 1),
+          size: item.size || null, // Include size if available
         };
       });
 
@@ -432,14 +433,21 @@ const CheckoutPage: React.FC = () => {
                 {cartItems.length === 0 ? (
                   <p className="text-gray-500 text-center py-4">Your cart is empty.</p>
                 ) : (
-                  cartItems.map((item) => (
-                    <div key={item.id} className="order-item">
+                  cartItems.map((item, index) => (
+                    <div key={`${item.id}-${item.size || index}`} className="order-item">
                       <img
                         src={item.image_url}
                         alt={item.name}
                         className="w-12 h-12 object-contain rounded-md mr-2"
                       />
-                      <span className="flex-1">{item.name} (x{item.quantity})</span>
+                      <div className="flex-1">
+                        <span>{item.name} (x{item.quantity})</span>
+                        {item.size && (
+                          <span className="text-sm text-gray-600 ml-2">
+                            - Size: {item.size}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-semibold">
                         ₹{(item.price * (item.quantity || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
